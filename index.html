@@ -1,12 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Risco Avançada - Venus</title>
+    <!-- Inclusão da Biblioteca Ethers.js para Integração Direta com a Blockchain -->
+    <script src="https://cloudflare.com"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #161b22;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        h2, h3 { text-align: center; color: #58a6ff; margin-top: 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            background-color: #0d1117;
+            color: #f0f6fc;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .btn-api {
+            width: 100%;
+            padding: 10px;
+            background-color: #21262d;
+            color: #58a6ff;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 10px;
+            transition: 0.2s;
+        }
+        .btn-api:hover { background-color: #30363d; }
+        .btn-web3 {
+            background-color: #1f6feb;
+            color: white;
+            border: 1px solid #388bfd;
+        }
+        .btn-web3:hover { background-color: #388bfd; }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .safe { background-color: #1f6feb; color: white; }
+        .moderate { background-color: #d29922; color: black; }
+        .danger { background-color: #f85149; color: white; }
+        .info { font-size: 14px; color: #8b949e; margin-top: 10px; text-align: center; font-weight: bold; }
+        
+        .panic-box {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px dashed #f85149;
+            background-color: rgba(248, 81, 73, 0.05);
+            border-radius: 5px;
+            text-align: center;
+        }
+        .panic-title { color: #f85149; font-weight: bold; margin-bottom: 5px; font-size: 15px; }
+        .panic-value { font-size: 16px; font-weight: bold; color: #f85149; line-height: 1.5; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #30363d;
+            white-space: nowrap;
+        }
+        th { background-color: #21262d; color: #58a6ff; }
+        tr:hover { background-color: #21262d; }
+        .text-danger { color: #f85149; font-weight: bold; }
+        .text-warning { color: #d29922; font-weight: bold; }
+        .text-safe { color: #58a6ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Simulador Dinâmico Venus v2</h2>
+    
+    <button class="btn-api btn-web3" id="btnSyncWallet" onclick="sincronizarDadosRede()">🔗 Atualizar Posição Pública da Carteira</button>
+    <button class="btn-api" onclick="atualizarPrecoAPI()">🔄 Sincronizar Preço Real do BTC</button>
+
+    <div class="input-group">
+        <label>Preço do BTC no Mercado (US$):</label>
+        <input type="number" id="btcPrice" value="63951" oninput="calcular()">
+    </div>
+
+    <div class="input-group">
+        <label>Seu Saldo BTCB (Colateral):</label>
+        <input type="number" id="btcBalance" value="0.009456" step="0.000001" oninput="calcular()">
+    </div>
+
+    <div class="input-group">
+        <label>Sua Dívida Total (US$):</label>
+        <input type="number" id="borrow" value="338.92" step="0.01" oninput="calcular()">
+    </div>
+
+    <div id="result" class="result-box moderate">
+        Fator de Saúde Atual: --
+    </div>
+    
+    <div id="liquidationPrice" class="info">
+        Preço limite de liquidação: US$ --
+    </div>
+
+    <div id="panicPanel" class="panic-box" style="display: none;">
+        <div class="panic-title">🚨 MÓDULO DE CONTINGÊNCIA Ativo</div>
+        <div id="panicInstruction" class="info" style="color: #c9d1d9; margin-top: 0;">Para atingir a Meta de Saúde Segura (1.50):</div>
+        <div id="panicAction" class="panic-value">--</div>
+    </div>
+</div>
+
+<div class="container">
+    <h3>Projeções Automáticas de Queda</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Queda</th>
+                <th>Preço BTC</th>
+                <th>Seu Colateral</th>
+                <th>Fator Saúde</th>
+            </tr>
+        </thead>
+        <tbody id="projectionTable">
+            <!-- Gerado via JavaScript Dinâmico -->
+        </tbody>
+    </table>
+</div>
+
 <script>
-// Alvo fixado com o endereço fornecido
+// Alvo fixado com o endereço fornecido pelo usuário
 const TARGET_WALLET = "0x49F8739791713858A6718564f035f8c35905829C";
 
-// Endereços de Contrato da Venus Protocol na BNB Chain
+// Endereços de Contrato Oficiais da Venus Protocol na BNB Chain
 const COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384";
 const VBTC_ADDRESS = "0x882C173bC7Ff3b7786CA16dfD90933a7d420955E";
 
-// ABIs estruturadas de leitura pública
+// ABIs para interação publica de leitura com os smart contracts da Venus
 const comptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint error, uint liquidity, uint shortfall)"];
 const vTokenAbi = [
     "function balanceOfSnapshot(address account) view returns (uint error, uint vTokenBalance, uint borrowBalance, uint exchangeRate)"
@@ -18,7 +175,7 @@ async function sincronizarDadosRede() {
     if (btn) btn.innerText = "⏳ Lendo Blockchain Venus...";
     
     try {
-        // Conexão por RPC público estável para ler os dados sem travar a página
+        // Conexão por RPC público estável da rede Binance Smart Chain
         const provider = new ethers.providers.JsonRpcProvider("https://binance.org");
         
         const vBtcContract = new ethers.Contract(VBTC_ADDRESS, vTokenAbi, provider);
@@ -94,87 +251,3 @@ function calcular() {
     if (borrow <= 0) {
         document.getElementById('result').innerText = "Fator de Saúde: ∞";
         document.getElementById('result').className = "result-box safe";
-        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
-        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
-        document.getElementById('panicPanel').style.display = "none";
-        return;
-    }
-
-    const colateralTotal = balance * price;
-    const hfAtual = (colateralTotal * fatorGarantia) / borrow;
-    const liqPrice = borrow / (balance * fatorGarantia);
-
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerText = "Fator de Saúde Atual: " + hfAtual.toFixed(2);
-    
-    if (hfAtual >= 1.5) resultDiv.className = "result-box safe";
-    else if (hfAtual >= 1.15) resultDiv.className = "result-box moderate";
-    else resultDiv.className = "text-danger result-box danger";
-
-    document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: US$ " + Math.round(liqPrice).toLocaleString('pt-BR');
-
-    // LÓGICA DO MÓDULO DE CONTINGÊNCIA
-    const panicPanel = document.getElementById('panicPanel');
-    if (hfAtual < healthMetaSegura) {
-        panicPanel.style.display = "block";
-        
-        const dividaMaxAlvo = (colateralTotal * fatorGarantia) / healthMetaSegura;
-        const pagarUSD = borrow - dividaMaxAlvo;
-        
-        const colateralAlvoUSD = (borrow * healthMetaSegura) / fatorGarantia;
-        const depositarUSD = colateralAlvoUSD - colateralTotal;
-        const depositarBTC = price > 0 ? (depositarUSD / price) : 0;
-
-        document.getElementById('panicAction').innerHTML = 
-            `Amortizar a dívida em: <span class="text-danger">US$ ${pagarUSD.toFixed(2)}</span><br>` +
-            `OU<br>` +
-            `Depositar colateral: <span class="text-safe">${depositarBTC.toFixed(6)} BTC</span> (~US$ ${depositarUSD.toFixed(2)})`;
-    } else {
-        panicPanel.style.display = "none";
-    }
-
-    // GERAÇÃO DINÂMICA DA TABELA DE PROJEÇÕES
-    const quedas = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50];
-    let tabelaHTML = "";
-
-    quedas.forEach(queda => {
-        const precoProjetado = Math.round(price * (1 - queda));
-        const colateralProjetado = balance * precoProjetado;
-        const hfProjetado = (colateralProjetado * fatorGarantia) / borrow;
-
-        let classeStatus = "text-safe";
-        if (hfProjetado < 1.15) {
-            classeStatus = "text-danger";
-        } else if (hfProjetado < 1.50) {
-            classeStatus = "text-warning";
-        }
-
-        tabelaHTML += `
-            <tr>
-                <td>${queda * 100}%</td>
-                <td>US$ ${precoProjetado.toLocaleString('pt-BR')}</td>
-                <td>US$ ${colateralProjetado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                <td class="${classeStatus}">${hfProjetado.toFixed(2)}</td>
-            </tr>
-        `;
-    });
-
-    document.getElementById('projectionTable').innerHTML = tabelaHTML;
-}
-
-// INICIALIZADOR SEGURO: Carrega a matemática local primeiro e ativa as rotinas automáticas de rede
-window.onload = function() {
-    // 1. Roda os cálculos com os números padrão salvos no HTML imediatamente
-    calcular();
-    
-    // 2. Faz a primeira busca online de preço e carteira de fundo
-    atualizarPrecoAPI();
-    sincronizarDadosRede();
-    
-    // 3. LOOP AUTOMÁTICO: Atualiza a cada 60 segundos (60000ms) sem travar a interface
-    setInterval(() => {
-        atualizarPrecoAPI();
-        sincronizarDadosRede();
-    }, 60000);
-};
-</script>
