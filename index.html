@@ -17,21 +17,17 @@
         .balance-label { color: #9ca3af; }
         .balance-value { color: #ffffff; font-weight: 600; }
         
-        /* Nova Seção do Medidor Circular Estilizado da Venus */
+        /* Gráfico Circular de Saúde Venus */
         .venus-health-gauge-box { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0; padding: 20px 0; border-top: 1px dashed #1e3a27; }
         .gauge-wrapper { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; }
-        
-        /* Círculos de fundo do medidor */
         .gauge-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
         .gauge-bg { fill: none; stroke: #1a231d; stroke-width: 4; }
         .gauge-track { fill: none; stroke: #1e3a27; stroke-width: 2; stroke-dasharray: 4,4; }
+        .gauge-progress { fill: none; stroke: #a3e635; stroke-width: 4; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 0.8s ease; }
         
-        /* Círculo Principal de Saúde e Animação do Ponto */
-        .gauge-progress { fill: none; stroke: #10b981; stroke-width: 4; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 1s ease-in-out; }
-        
+        /* Ponto Orbitando */
         .orbit-dot { position: absolute; width: 12px; height: 12px; background-color: #a3e635; border-radius: 50%; box-shadow: 0 0 12px #a3e635; top: 94px; left: 94px; transform-origin: center; animation: orbit 4s linear infinite; }
         
-        /* Centro do Medidor Circular */
         .gauge-center-text { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .gauge-title { color: #8892b0; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 2px; }
         .gauge-number { color: #a3e635; font-size: 44px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
@@ -57,7 +53,6 @@
         .price-value { color: #ffffff; font-size: 16px; font-weight: 600; }
         .percentage-value { color: #626770; font-size: 12px; }
 
-        /* Animação do Ponto Orbitando ao Redor do Círculo */
         @keyframes orbit {
             0% { transform: rotate(0deg) translate(90px) rotate(0deg); }
             100% { transform: rotate(360deg) translate(90px) rotate(-360deg); }
@@ -73,10 +68,10 @@
             
             <div class="wallet-balance-container">
                 <span class="balance-label">Saldo em Conta:</span>
-                <span class="balance-value" id="wallet-balance">Buscando...</span>
+                <span class="balance-value" id="wallet-balance">Conectando...</span>
             </div>
 
-            <!-- NOVO MEDIDOR CIRCULAR EM MOVIMENTO DA CARTEIRA VENUS -->
+            <!-- CÍRCULO DINÂMICO CONECTADO -->
             <div class="venus-health-gauge-box">
                 <div class="gauge-wrapper">
                     <svg class="gauge-svg" viewBox="0 0 200 200">
@@ -89,7 +84,7 @@
                     <div class="gauge-center-text">
                         <span class="gauge-title">Fator de Saúde</span>
                         <div class="gauge-number" id="venus-health-val">--.--</div>
-                        <div class="gauge-badge" id="venus-health-status">Analisando</div>
+                        <div class="gauge-badge" id="venus-health-status">Online</div>
                     </div>
                 </div>
             </div>
@@ -99,7 +94,7 @@
             <div class="header-title-container">
                 <span class="subtitle">Limites Dinâmicos</span>
                 <h1 class="main-title">Pontos de risco do BTC</h1>
-                <div class="price-now-badge" id="btc-live-price">Calculando mercado...</div>
+                <div class="price-now-badge" id="btc-live-price">Sincronizando...</div>
             </div>
         </div>
 
@@ -149,9 +144,10 @@
     </div>
 
     <script>
+        // Altere para a sua carteira real com empréstimos ativos para ver a saúde se mover
         const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
 
-        function atualizarInterfacePreco(btcPrice) {
+        function atualizarPrecoPainel(btcPrice) {
             document.getElementById("btc-live-price").innerText = "BTC Atual: " + btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
             const warningPrice = btcPrice * (1 - 0.023);
@@ -163,3 +159,5 @@
             document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
         }
 
+        // 1. ATUALIZAÇÃO CONSTANTE DO BITCOIN (Via API Oficial de Preços da Binance)
+        function fetchOnlinePrice() {
