@@ -48,12 +48,12 @@
             
             <div class="wallet-balance-container">
                 <span class="balance-label">Saldo em Conta:</span>
-                <span class="balance-value" id="wallet-balance">0.0000 BNB</span>
+                <span class="balance-value" id="wallet-balance">Buscando saldo...</span>
             </div>
 
             <div class="venus-health-container">
                 <span class="balance-label">Saúde no Venus Protocol:</span>
-                <span class="health-score-value" id="venus-health">Sem riscos</span>
+                <span class="health-score-value" id="venus-health">Analisando...</span>
             </div>
         </div>
 
@@ -61,7 +61,7 @@
             <div class="header-title-container">
                 <span class="subtitle">Limites Dinâmicos</span>
                 <h1 class="main-title">Pontos de risco do BTC</h1>
-                <div class="price-now-badge" id="btc-live-price">Buscando preço...</div>
+                <div class="price-now-badge" id="btc-live-price">Calculando mercado...</div>
             </div>
         </div>
 
@@ -125,20 +125,20 @@
             document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
         }
 
-        // Usando a API oficial de tickers da Blockchain.info (Altamente compatível com navegadores de celulares)
         function loadBitcoinPrice() {
-            fetch("https://blockchain.info")
+            // Chamada direta para o endpoint open-source livre de bloqueios CORS do Mempool
+            fetch("https://mempool.space")
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.USD) {
-                        atualizarInterfacePreco(data.USD.last);
+                        atualizarInterfacePreco(data.USD);
                     }
                 })
-                .catch(e => console.log("Erro de rede ao processar preço."));
+                .catch(e => console.log("Erro de conexão ao buscar BTC"));
         }
 
         function loadWalletAndVenusData() {
-            // Busca o saldo utilizando a chamada pública RPC da rede BSC sem cabeçalhos restritivos
+            // Chamada POST limpa usando a infraestrutura do Ankr RPC de forma direta
             fetch("https://ankr.com", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -160,7 +160,7 @@
             })
             .catch(e => document.getElementById("wallet-balance").innerText = "0.0000 BNB");
 
-            // Coleta a saúde dinamicamente direto da API pública de indexação
+            // Atualização dinâmica do Fator de Saúde diretamente do indexador da Venus
             fetch("https://venus.io" + wallet)
                 .then(res => res.json())
                 .then(data => {
@@ -174,3 +174,4 @@
                         } else {
                             elHealth.innerHTML = `<span style="color: #a63d3d;">${healthScore.toFixed(2)} (Risco Crítico)</span>`;
                         }
+                    } else {
