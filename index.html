@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Risco Avançada - Venus</title>
-    <!-- Inclusão da Biblioteca Ethers.js para Integração Web3 com a BNB Chain -->
+    <!-- Inclusão da Biblioteca Ethers.js para Integração Direta com a Blockchain -->
     <script src="https://cloudflare.com"></script>
     <style>
         body {
@@ -52,11 +52,11 @@
         }
         .btn-api:hover { background-color: #30363d; }
         .btn-web3 {
-            background-color: #238636;
+            background-color: #1f6feb;
             color: white;
-            border: 1px solid #2ea44f;
+            border: 1px solid #388bfd;
         }
-        .btn-web3:hover { background-color: #2ea44f; }
+        .btn-web3:hover { background-color: #388bfd; }
         .result-box {
             margin-top: 20px;
             padding: 15px;
@@ -105,7 +105,7 @@
 <div class="container">
     <h2>Simulador Dinâmico Venus v2</h2>
     
-    <button class="btn-api btn-web3" id="btnConnect" onclick="conectarCarteira()">🦊 Conectar Carteira Web3 (Venus)</button>
+    <button class="btn-api btn-web3" id="btnSyncWallet" onclick="sincronizarDadosRede()">🔗 Atualizar Posição Pública da Carteira</button>
     <button class="btn-api" onclick="atualizarPrecoAPI()">🔄 Sincronizar Preço Real do BTC</button>
 
     <div class="input-group">
@@ -156,72 +156,56 @@
 </div>
 
 <script>
-// Contratos Oficiais da Venus Protocol na BNB Chain para a leitura automatizada dos saldos
+// Alvo fixado com o endereço fornecido
+const TARGET_WALLET = "0x49F8739791713858A6718564f035f8c35905829C";
+
+// Endereços de Contrato da Venus Protocol na BNB Chain
 const COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384";
 const VBTC_ADDRESS = "0x882C173bC7Ff3b7786CA16dfD90933a7d420955E";
 
-// ABIs mínimas necessárias para interagir com os smart contracts do protocolo
-const comptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint, uint, uint)"];
+// ABIs para interação publica de leitura com os smart contracts da Venus
+const comptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint error, uint liquidity, uint shortfall)"];
 const vTokenAbi = [
-    "function balanceOfSnapshot(address account) view returns (uint, uint, uint, uint)",
-    "function borrowBalanceStored(address account) view returns (uint)"
+    "function balanceOfSnapshot(address account) view returns (uint error, uint vTokenBalance, uint borrowBalance, uint exchangeRate)"
 ];
 
-async function conectarCarteira() {
-    const btn = document.getElementById('btnConnect');
-    if (typeof window.ethereum === 'undefined') {
-        alert('Por favor, utilize um navegador Web3 ou instale a extensão MetaMask/Trust Wallet.');
-        return;
-    }
-    
+async function sincronizarDadosRede() {
+    const btn = document.getElementById('btnSyncWallet');
     try {
-        btn.innerText = "⏳ Conectando...";
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
-        const walletAddress = await signer.getAddress();
+        btn.innerText = "⏳ Lendo Blockchain Venus...";
         
-        btn.innerText = `✅ Conectado: ${walletAddress.substring(0,6)}...${walletAddress.substring(38)}`;
-        btn.className = "btn-api"; // remove cor verde de desconectado
+        // Conexão por RPC público para ler os dados da BNB Chain sem depender de login/extensão
+        const provider = new ethers.providers.JsonRpcProvider("https://binance.org");
         
-        await buscarDadosVenus(provider, walletAddress);
-    } catch (erro) {
-        console.error(erro);
-        btn.innerText = "❌ Erro ao conectar carteira.";
-        setTimeout(() => { btn.innerText = "🦊 Conectar Carteira Web3 (Venus)"; }, 3000);
-    }
-}
-
-async function buscarDadosVenus(provider, walletAddress) {
-    try {
-        // Conexão com os contratos da rede através da carteira injetada
         const vBtcContract = new ethers.Contract(VBTC_ADDRESS, vTokenAbi, provider);
         const comptrollerContract = new ethers.Contract(COMPTROLLER_ADDRESS, comptrollerAbi, provider);
 
-        // 1. Busca os saldos internos de fornecimento (Snapshot)
-        const snapshot = await vBtcContract.balanceOfSnapshot(walletAddress);
-        const vTokenBalance = snapshot[1]; 
-        const exchangeRate = snapshot[3];
-        
-        // Conversão matemática estrutural de Wei para unidades legíveis do Token BTCB fornecido
-        const balanceBTCB = (vTokenBalance.mul(exchangeRate).div(ethers.constants.WeiPerEther)).toString();
+        // Executa a leitura estruturada dos retornos da Blockchain na carteira alvo
+        const snapshot = await vBtcContract.balanceOfSnapshot(TARGET_WALLET);
+        const vTokenBalance = snapshot.vTokenBalance; 
+        const exchangeRate = snapshot.exchangeRate;
+        const dividaVTokenUSD = snapshot.borrowBalance; 
+
+        // Conversão matemática de precisão de Wei para unidades fracionadas do BTCB fornecido
+        const balanceBTCB = vTokenBalance.mul(exchangeRate).div(ethers.constants.WeiPerEther);
         const btcColateralFinal = parseFloat(ethers.utils.formatUnits(balanceBTCB, 18));
+        const dividaFinalUSD = parseFloat(ethers.utils.formatUnits(dividaVTokenUSD, 18));
 
-        // 2. Busca a dívida total direta da conta do usuário em dólares (Liquidez do Comptroller)
-        const liquidez = await comptrollerContract.getAccountLiquidity(walletAddress);
-        const dividaTotalUSD = parseFloat(ethers.utils.formatUnits(liquidez[2], 18)); 
-
-        // Atualiza a árvore DOM com os dados dinâmicos extraídos diretamente da rede BNB chain
-        if(btcColateralFinal > 0) {
+        // Atualização da árvore DOM com os dados reais
+        if (btcColateralFinal > 0) {
             document.getElementById('btcBalance').value = btcColateralFinal.toFixed(6);
         }
-        document.getElementById('borrow').value = dividaTotalUSD.toFixed(2);
+        if (dividaFinalUSD > 0) {
+            document.getElementById('borrow').value = dividaFinalUSD.toFixed(2);
+        }
 
-        // Dispara o motor de cálculos nativo
+        btn.innerText = "✅ Carteira Sincronizada!";
         calcular();
+        setTimeout(() => { btn.innerText = "🔗 Atualizar Posição Pública da Carteira"; }, 3000);
     } catch (erro) {
-        console.error("Falha ao sincronizar dados da carteira na Blockchain:", erro);
-        alert("Erro ao ler os dados do Venus Protocol. Verifique se está conectado na rede BNB Chain.");
+        console.error("Falha ao sincronizar dados:", erro);
+        btn.innerText = "❌ Erro de Conexão RPC";
+        setTimeout(() => { btn.innerText = "🔗 Atualizar Posição Pública da Carteira"; }, 3000);
     }
 }
 
@@ -253,3 +237,15 @@ function calcular() {
     const healthMetaSegura = 1.50; 
     
     if (borrow <= 0) {
+        document.getElementById('result').innerText = "Fator de Saúde: ∞";
+        document.getElementById('result').className = "result-box safe";
+        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
+        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
+        document.getElementById('panicPanel').style.display = "none";
+        return;
+    }
+
+    const colateralTotal = balance * price;
+    const hfAtual = (colateralTotal * fatorGarantia) / borrow;
+    const liqPrice = borrow / (balance * fatorGarantia);
+
