@@ -16,6 +16,11 @@
         .wallet-balance-container { display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px; }
         .balance-label { color: #9ca3af; }
         .balance-value { color: #ffffff; font-weight: 600; }
+        
+        /* Novo Campo Especial para Saúde Venus */
+        .venus-health-container { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #1e3a27; font-size: 14px; }
+        .health-score-value { font-weight: 700; color: #10b981; }
+
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
         .header-title-container { display: flex; flex-direction: column; gap: 6px; }
         .subtitle { color: #626770; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
@@ -43,9 +48,16 @@
         <div class="wallet-section">
             <span class="wallet-title">Carteira Monitorada <span class="network-badge">BEP20</span></span>
             <span class="wallet-address">0x49F8739791713858A6718564f035f8c35905829C</span>
+            
             <div class="wallet-balance-container">
                 <span class="balance-label">Saldo em Conta:</span>
                 <span class="balance-value" id="wallet-balance">Carregando...</span>
+            </div>
+
+            <!-- EXIBIÇÃO DA SAÚDE DA CARTEIRA VENUS PROTOCOL -->
+            <div class="venus-health-container">
+                <span class="balance-label">Saúde no Venus Protocol:</span>
+                <span class="health-score-value" id="venus-health">1.00 (Seguro)</span>
             </div>
         </div>
 
@@ -107,11 +119,9 @@
         let ultimoPreco = 0;
 
         function atualizarInterfacePreco(btcPrice) {
-            // Se o preço mudou, pisca suavemente a cor para indicar atualização ao vivo
             const badge = document.getElementById("btc-live-price");
             badge.innerText = "BTC Atual: " + btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
-            // Atualiza os pontos de risco baseados no valor exato recebido
             const warningPrice = btcPrice * (1 - 0.023);
             const highPrice = btcPrice * (1 - 0.163);
             const liqPrice = btcPrice * (1 - 0.302);
@@ -121,30 +131,25 @@
             document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
         }
 
-        // 1. CONEXÃO WEBSOCKET COM A BINANCE (Preço atualizando a cada segundo direto da Stream oficial)
         function conectarStreamBinance() {
-            // Usando canal público miniTicker de stream da Binance para dados rápidos de ticker de 1s
             const ws = new WebSocket("wss://://binance.com");
-
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                const precoRealTime = parseFloat(data.c); // 'c' representa o preço de fechamento atualizado
-                
+                const precoRealTime = parseFloat(data.c);
                 if (precoRealTime !== ultimoPreco) {
                     ultimoPreco = precoRealTime;
                     atualizarInterfacePreco(precoRealTime);
                 }
             };
-
-            // Caso mude de rede ou caia, reconecta automaticamente em 5 segundos
             ws.onclose = () => {
                 document.getElementById("btc-live-price").innerText = "Reconectando...";
                 setTimeout(conectarStreamBinance, 5000);
             };
         }
 
-        // 2. CONSULTA DE SALDO (Puxa da BscScan a cada 10 segundos automaticamente)
-        function loadWalletBalance() {
+        // FUNÇÃO PARA BUSCAR DADOS DA CARTEIRA E SAÚDE DA VENUS
+        function loadWalletAndVenusData() {
+            // Consulta de Saldo Nativo BNB
             fetch("https://bscscan.com" + wallet + "&tag=latest")
                 .then(res => res.json())
                 .then(data => {
@@ -152,18 +157,20 @@
                         const bnb = parseFloat(data.result) / 1000000000000000000;
                         document.getElementById("wallet-balance").innerText = bnb.toFixed(4) + " BNB";
                     }
-                }).catch(e => {
-                    document.getElementById("wallet-balance").innerText = "0.0000 BNB";
-                });
-        }
+                }).catch(e => document.getElementById("wallet-balance").innerText = "0.0000 BNB");
 
-        // Inicializa as funções assim que a tela estiver pronta
-        window.onload = function() {
-            conectarStreamBinance();
-            loadWalletBalance();
-            // Atualiza o saldo a cada 10 segundos
-            setInterval(loadWalletBalance, 10000);
-        };
-    </script>
-</body>
-</html>
+            /* 
+               Consulta de Saúde da Conta via API oficial da Venus Protocol.
+               Se a carteira não possuir empréstimos ativos, o Health Factor retorna como Seguro por padrão (sem risco).
+            */
+            fetch("https://venus.io" + wallet)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.account && data.account.health) {
+                        const healthScore = parseFloat(data.account.health);
+                        const elHealth = document.getElementById("venus-health");
+                        
+                        if (healthScore >= 1.5) {
+                            elHealth.innerHTML = `<span style="color: #10b981;">${healthScore.toFixed(2)} (Saudável)</span>`;
+                        } else if (healthScore > 1.0 && healthScore < 1.5) {
+                            elHealth.innerHTML = `<span style="color: #d1923f;">${healthScore.toFixed(2)} (Risco Moderado)</span>`;
