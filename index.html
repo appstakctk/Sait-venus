@@ -32,6 +32,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            padding-bottom: 40px;
         }
 
         .card {
@@ -228,61 +229,13 @@
             color: var(--accent-green);
             font-weight: bold;
         }
-
-        /* Stress Test Table */
-        .stress-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .stress-table th {
-            font-size: 10px;
-            color: var(--text-secondary);
-            text-align: left;
-            padding-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        .stress-table td {
-            padding: 10px 0;
-            font-size: 13px;
-            border-bottom: 1px solid #17221a;
-        }
-
-        .stress-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .col-right { text-align: right; }
-        .drop-val { color: var(--text-secondary); }
-        .price-val { font-weight: 600; }
-        
-        .health-badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 11px;
-        }
-        .h-green { background: #1a2e1d; color: var(--accent-green); }
-        .h-yellow { background: #2e2a14; color: var(--accent-yellow); }
-        .h-red { background: #331414; color: var(--accent-red); }
-
-        .footer-text {
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 15px;
-            line-height: 1.5;
-        }
     </style>
 </head>
 <body>
 
     <div class="dashboard">
 
-        <!-- Fator de Saúde com Círculo Animado -->
+        <!-- Fator de Saúde Animado -->
         <div class="gauge-container">
             <div class="gauge-wrapper">
                 <div class="gauge-circle-animated"></div>
@@ -294,45 +247,70 @@
             </div>
         </div>
 
-        <!-- BTC / USDT -->
+        <!-- Card 1: BTC / USDT -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">🪙 BTC / USDT</div>
-                <span>PERMANENTE: BTC/USDT</span>
+                <span style="color: #707a73; font-size: 10px;">PERMANENTE: BTC/USDT</span>
             </div>
             <div class="card-main-value" id="btc-price">US$ 64.777,54</div>
             <div class="card-footer-data">
-                <span id="market-status" style="color: var(--accent-green);">● Mercado conectado</span>
-                <span>🔄</span>
+                <span style="color: var(--accent-green);">● Mercado conectado</span>
             </div>
         </div>
 
-        <!-- Colateral BTCB (Unificado e corrigido) -->
+        <!-- Card 2: Colateral BTCB -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">🏦 Colateral BTCB</div>
-                <span>DEPOSITADO</span>
+                <span style="color: #707a73; font-size: 10px;">DEPOSITADO</span>
             </div>
-            <div class="card-main-value" id="collateral-crypto">0.010919 BTCB</div>
+            <div class="card-main-value">0.010919 BTCB</div>
             <div class="card-footer-data">
-                <span id="collateral-fiat">USD 706,42</span>
-                <span id="ltv-value">LTV: 55%</span>
+                <span>USD 706,42</span>
+                <span>LTV: 55%</span>
             </div>
         </div>
 
-        <!-- Dívida Total -->
+        <!-- Card 3: Dívida Total -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">💼 Dívida total</div>
-                <span>EMPRÉSTIMO</span>
+                <span style="color: #707a73; font-size: 10px;">EMPRÉSTIMO</span>
             </div>
-            <div class="card-main-value" id="total-debt">US$ 393,13</div>
+            <div class="card-main-value">US$ 393,13</div>
             <div class="card-footer-data">
                 <span>colateral ponderado</span>
-                <span id="weighted-collateral">US$ 564,28</span>
+                <span>US$ 564,28</span>
             </div>
         </div>
 
-        <!-- Limites de Segurança -->
+        <!-- Card 4: Limites de Segurança -->
         <div class="card">
-            <div class="card-header" style="margin-bottom: 2px;">
+            <div class="card-header">
+                <span style="color: var(--accent-green); font-size: 10px; letter-spacing: 1px;">LIMITES DE SEGURANÇA</span>
+            </div>
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">Pontos de decisão</div>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-green"></div>
+                    <div class="timeline-info">
+                        <span class="timeline-label">Preço atual</span>
+                        <span class="timeline-value" id="timeline-current-price">US$ 64.777,54</span>
+                    </div>
+                    <span class="badge badge-green">Agora</span>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-yellow"></div>
+                    <div class="timeline-info">
+                        <span class="timeline-label">Saúde 1.40 - Ponto de atenção</span>
+                        <span class="timeline-value" id="price-attention">US$ 63.003,32</span>
+                    </div>
+                    <span class="badge badge-yellow">Atenção</span>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-red"></div>
+                    <div class="timeline-info">
