@@ -4,247 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Limites Dinâmicos & Carteira BEP20 (BSC)</title>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com" rel="stylesheet">
-    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: #0b0c0e;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            gap: 20px;
-        }
-
-        /* Container Principal */
-        .card {
-            background-color: #121316;
-            width: 100%;
-            max-width: 500px;
-            border-radius: 24px;
-            padding: 28px 24px;
-            border: 1px solid #1f2226;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Seção de Carteira - Rede BEP20 */
-        .wallet-section {
-            background-color: #161c18;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 24px;
-            border: 1px solid #1e3a27;
-        }
-
-        .wallet-title {
-            color: #10b981;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .network-badge {
-            background-color: #f3ba2f;
-            color: #000000;
-            padding: 1px 5px;
-            border-radius: 4px;
-            font-size: 9px;
-            font-weight: 700;
-        }
-
-        .wallet-address {
-            color: #f3ba2f;
-            font-size: 12px;
-            word-break: break-all;
-            font-family: monospace;
-            background: #111317;
-            padding: 8px;
-            border-radius: 8px;
-            display: block;
-            border: 1px solid #1f2226;
-        }
-
-        .wallet-balance-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 12px;
-            font-size: 14px;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #0b0c0e; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background-color: #121316; width: 100%; max-width: 500px; border-radius: 24px; padding: 28px 24px; border: 1px solid #1f2226; }
+        .wallet-section { background-color: #161c18; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #1e3a27; }
+        .wallet-title { color: #10b981; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .network-badge { background-color: #f3ba2f; color: #000000; padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+        .wallet-address { color: #f3ba2f; font-size: 12px; word-break: break-all; font-family: monospace; background: #111317; padding: 8px; border-radius: 8px; display: block; border: 1px solid #1f2226; }
+        .wallet-balance-container { display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px; }
         .balance-label { color: #9ca3af; }
         .balance-value { color: #ffffff; font-weight: 600; }
-
-        /* Cabeçalho do Card */
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 32px;
-        }
-
-        .header-title-container {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .subtitle {
-            color: #626770;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .main-title {
-            color: #ffffff;
-            font-size: 20px;
-            font-weight: 500;
-            letter-spacing: -0.5px;
-        }
-
-        .price-now-badge {
-            font-size: 12px;
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-            padding: 4px 8px;
-            border-radius: 6px;
-            margin-top: 4px;
-            display: inline-block;
-        }
-
-        .idea-icon {
-            width: 22px;
-            height: 22px;
-            color: #626770;
-            margin-top: 4px;
-        }
-
-        /* Lista de Itens de Risco */
-        .risk-list {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .risk-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            border-bottom: 1px solid #1c1e22;
-        }
-
-        .risk-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .risk-item:first-child {
-            padding-top: 0;
-        }
-
-        .status-block {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .indicator-bar {
-            width: 4px;
-            height: 38px;
-            border-radius: 4px;
-        }
-
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+        .header-title-container { display: flex; flex-direction: column; gap: 6px; }
+        .subtitle { color: #626770; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
+        .main-title { color: #ffffff; font-size: 20px; font-weight: 500; }
+        .price-now-badge { font-size: 12px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; }
+        .risk-list { display: flex; flex-direction: column; }
+        .risk-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #1c1e22; }
+        .risk-item:last-child { border-bottom: none; }
+        .status-block { display: flex; align-items: center; gap: 14px; }
+        .indicator-bar { width: 4px; height: 38px; border-radius: 4px; }
         .bar-warning { background-color: #d1923f; }
         .bar-high-risk { background-color: #bb6e34; }
         .bar-liquidation { background-color: #a63d3d; }
-
-        .status-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .status-label {
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .health-label {
-            color: #626770;
-            font-size: 12px;
-        }
-
-        .price-block {
-            text-align: right;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .price-value {
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        .percentage-value {
-            color: #626770;
-            font-size: 12px;
-        }
+        .status-info { display: flex; flex-direction: column; gap: 4px; }
+        .status-label { color: #ffffff; font-size: 15px; font-weight: 600; }
+        .health-label { color: #626770; font-size: 12px; }
+        .price-block { text-align: right; display: flex; flex-direction: column; gap: 4px; }
+        .price-value { color: #ffffff; font-size: 16px; font-weight: 600; }
+        .percentage-value { color: #626770; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <!-- Widget Dinâmico da Carteira na rede BEP20 -->
         <div class="wallet-section">
-            <span class="wallet-title">
-                Carteira Monitorada 
-                <span class="network-badge">BEP20</span>
-            </span>
+            <span class="wallet-title">Carteira Monitorada <span class="network-badge">BEP20</span></span>
             <span class="wallet-address">0x49F8739791713858A6718564f035f8c35905829C</span>
-            
             <div class="wallet-balance-container">
                 <span class="balance-label">Saldo em Conta:</span>
-                <span class="balance-value" id="wallet-balance">Carregando...</span>
+                <span class="balance-value" id="wallet-balance">0.0000 BNB</span>
             </div>
         </div>
 
-        <!-- Cabeçalho Principal -->
         <div class="card-header">
             <div class="header-title-container">
                 <span class="subtitle">Limites Dinâmicos</span>
                 <h1 class="main-title">Pontos de risco do BTC</h1>
-                <div class="price-now-badge" id="btc-live-price">BTC Atual: Carregando...</div>
+                <div class="price-now-badge" id="btc-live-price">BTC Atual: $64,400.00</div>
             </div>
-            <svg class="idea-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://w3.org">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-            </svg>
         </div>
 
-        <!-- Lista de Risco Monitorada -->
         <div class="risk-list">
-            
-            <!-- Aviso -->
             <div class="risk-item">
                 <div class="status-block">
                     <div class="indicator-bar bar-warning"></div>
@@ -254,12 +67,11 @@
                     </div>
                 </div>
                 <div class="price-block">
-                    <span class="price-value" id="price-warning">US$ --.--</span>
-                    <span class="percentage-value" id="pct-warning">-2.3% do preço atual</span>
+                    <span class="price-value" id="price-warning">$62,918.80</span>
+                    <span class="percentage-value">-2.3% do preço atual</span>
                 </div>
             </div>
 
-            <!-- Risco Alto -->
             <div class="risk-item">
                 <div class="status-block">
                     <div class="indicator-bar bar-high-risk"></div>
@@ -269,12 +81,11 @@
                     </div>
                 </div>
                 <div class="price-block">
-                    <span class="price-value" id="price-high">US$ --.--</span>
-                    <span class="percentage-value" id="pct-high-risk">-16.3% do preço atual</span>
+                    <span class="price-value" id="price-high">$53,902.80</span>
+                    <span class="percentage-value">-16.3% do preço atual</span>
                 </div>
             </div>
 
-            <!-- Liquidação -->
             <div class="risk-item">
                 <div class="status-block">
                     <div class="indicator-bar bar-liquidation"></div>
@@ -284,28 +95,37 @@
                     </div>
                 </div>
                 <div class="price-block">
-                    <span class="price-value" id="price-liq">US$ --.--</span>
-                    <span class="percentage-value" id="pct-liquidation">-30.2% do preço atual</span>
+                    <span class="price-value" id="price-liq">$44,951.20</span>
+                    <span class="percentage-value">-30.2% do preço atual</span>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- NOVO SCRIPT INJETADO DIRETAMENTE -->
     <script>
-        const walletAddress = "0x49F8739791713858A6718564f035f8c35905829C";
-        const PRECO_ESTIMADO_BTC = 64400.00; 
+        // Script simplificado rodando diretamente após o carregamento da janela
+        window.onload = function() {
+            const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
 
-        function calcularLimites(btcPrice) {
-            document.getElementById("btc-live-price").innerText = `BTC Atual: ${btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`;
+            fetch("https://coindesk.com")
+                .then(res => res.json())
+                .then(data => {
+                    const price = data.bpi.USD.rate_float;
+                    document.getElementById("btc-live-price").innerText = "BTC Atual: " + price.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                    document.getElementById("price-warning").innerText = (price * 0.977).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                    document.getElementById("price-high").innerText = (price * 0.837).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                    document.getElementById("price-liq").innerText = (price * 0.698).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                }).catch(e => console.log("Erro API Preço"));
 
-            const warningPrice = btcPrice * (1 - 0.023);
-            const highPrice = btcPrice * (1 - 0.163);
-            const liqPrice = btcPrice * (1 - 0.302);
-
-            document.getElementById("price-warning").innerText = warningPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-            document.getElementById("price-high").innerText = highPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-            document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-        }
-
+            fetch("https://bscscan.com" + wallet + "&tag=latest")
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === "1") {
+                        const bnb = parseFloat(data.result) / 1000000000000000000;
+                        document.getElementById("wallet-balance").innerText = bnb.toFixed(4) + " BNB";
+                    }
+                }).catch(e => console.log("Erro API Saldo"));
+        };
+    </script>
+</body>
+</html>
