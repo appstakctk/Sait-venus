@@ -3,250 +3,336 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Risco Avançada - Venus</title>
+    <title>Painel de Saúde Financeira - Venus Protocol</title>
     <style>
+        :root {
+            --bg-color: #0b0f0c;
+            --card-bg: #131a15;
+            --text-primary: #ffffff;
+            --text-secondary: #707a73;
+            --accent-green: #9eff00;
+            --accent-yellow: #ffd000;
+            --accent-red: #ff4d4d;
+            --border-color: #1f2a22;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #0d1117;
-            color: #c9d1d9;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
             padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Top Gauge Animado */
+        .gauge-container {
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 30px 10px;
         }
-        .container {
-            background-color: #161b22;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            max-width: 500px;
-            width: 100%;
-            margin-bottom: 20px;
+
+        .gauge-wrapper {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        h2, h3 { text-align: center; color: #58a6ff; margin-top: 0; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #30363d;
-            border-radius: 5px;
-            background-color: #0d1117;
-            color: #f0f6fc;
-            box-sizing: border-box;
-            font-size: 16px;
+
+        .gauge-circle-animated {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 3px dashed var(--accent-green);
+            border-radius: 50%;
+            animation: rotateGauge 8s linear infinite, colorPulse 6s ease-in-out infinite;
+            box-shadow: 0 0 15px rgba(158, 255, 0, 0.2);
+            transition: border-color 0.5s ease, box-shadow 0.5s ease;
         }
-        .btn-api {
-            width: 100%;
-            padding: 10px;
-            background-color: #21262d;
-            color: #58a6ff;
-            border: 1px solid #30363d;
-            border-radius: 5px;
-            cursor: pointer;
+
+        .gauge-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .gauge-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .gauge-value {
+            font-size: 42px;
             font-weight: bold;
-            margin-bottom: 15px;
-            transition: 0.2s;
+            color: var(--accent-green);
+            margin: 5px 0;
         }
-        .btn-api:hover { background-color: #30363d; }
-        .result-box {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
+
+        .gauge-status {
+            font-size: 10px;
+            color: var(--accent-green);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes rotateGauge {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes colorPulse {
+            0% { border-color: #9eff00; box-shadow: 0 0 15px rgba(158, 255, 0, 0.4); }
+            25% { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+            50% { border-color: #b600ff; box-shadow: 0 0 15px rgba(182, 0, 255, 0.4); }
+            75% { border-color: #ffd000; box-shadow: 0 0 15px rgba(255, 208, 0, 0.4); }
+            100% { border-color: #9eff00; box-shadow: 0 0 15px rgba(158, 255, 0, 0.4); }
+        }
+
+        /* Row Cards */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: #d1d5d2;
+        }
+
+        .card-main-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-footer-data {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Decision Points Timeline */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 10px;
+            bottom: 10px;
+            width: 2px;
+            background: #233026;
+        }
+
+        .timeline-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -15px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: grey;
+            top: 14px;
+        }
+
+        .dot-green { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+        .dot-yellow { background: var(--accent-yellow); }
+        .dot-red { background: var(--accent-red); }
+
+        .timeline-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timeline-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .timeline-value {
             font-size: 18px;
             font-weight: bold;
+            margin-top: 2px;
         }
-        .safe { background-color: #1f6feb; color: white; }
-        .moderate { background-color: #d29922; color: black; }
-        .danger { background-color: #f85149; color: white; }
-        .info { font-size: 14px; color: #8b949e; margin-top: 10px; text-align: center; font-weight: bold; }
-        
-        .panic-box {
-            margin-top: 15px;
-            padding: 15px;
-            border: 1px dashed #f85149;
-            background-color: rgba(248, 81, 73, 0.05);
-            border-radius: 5px;
-            text-align: center;
-        }
-        .panic-title { color: #f85149; font-weight: bold; margin-bottom: 5px; font-size: 15px; }
-        .panic-value { font-size: 16px; font-weight: bold; color: #f85149; line-height: 1.5; }
 
-        table {
+        .badge {
+            font-size: 10px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-green { background: #1a2e1d; color: var(--accent-green); }
+        .badge-yellow { background: #2e2a14; color: var(--accent-yellow); }
+        .badge-red { background: #331414; color: var(--accent-red); }
+
+        .alert-box {
+            background-color: #162218;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .alert-box span {
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        /* Stress Test Table */
+        .stress-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+        }
+
+        .stress-table th {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: left;
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stress-table td {
+            padding: 10px 0;
             font-size: 13px;
+            border-bottom: 1px solid #17221a;
         }
-        th, td {
-            padding: 8px;
+
+        .stress-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .col-right { text-align: right; }
+        .drop-val { color: var(--text-secondary); }
+        .price-val { font-weight: 600; }
+        
+        .health-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .h-green { background: #1a2e1d; color: var(--accent-green); }
+        .h-yellow { background: #2e2a14; color: var(--accent-yellow); }
+        .h-red { background: #331414; color: var(--accent-red); }
+
+        .footer-text {
             text-align: center;
-            border-bottom: 1px solid #30363d;
-            white-space: nowrap;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 15px;
+            line-height: 1.5;
         }
-        th { background-color: #21262d; color: #58a6ff; }
-        tr:hover { background-color: #21262d; }
-        .text-danger { color: #f85149; font-weight: bold; }
-        .text-warning { color: #d29922; font-weight: bold; }
-        .text-safe { color: #58a6ff; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Simulador Dinâmico Venus v2</h2>
-    
-    <button class="btn-api" onclick="atualizarPrecoAPI()">🔄 Sincronizar Preço Real do BTC</button>
+    <div class="dashboard">
 
-    <div class="input-group">
-        <label>Preço do BTC no Mercado (US$):</label>
-        <input type="number" id="btcPrice" value="63951" oninput="calcular()">
-    </div>
+        <!-- Fator de Saúde com Círculo Animado -->
+        <div class="gauge-container">
+            <div class="gauge-wrapper">
+                <div class="gauge-circle-animated"></div>
+                <div class="gauge-content">
+                    <span class="gauge-label">Fator de Saúde</span>
+                    <span class="gauge-value" id="health-factor">1.44</span>
+                    <span class="gauge-status" id="health-status">POSIÇÃO SAUDÁVEL</span>
+                </div>
+            </div>
+        </div>
 
-    <div class="input-group">
-        <label>Seu Saldo BTCB (Colateral):</label>
-        <input type="number" id="btcBalance" value="0.009456" step="0.000001" oninput="calcular()">
-    </div>
+        <!-- BTC / USDT -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🪙 BTC / USDT</div>
+                <span>PERMANENTE: BTC/USDT</span>
+            </div>
+            <div class="card-main-value" id="btc-price">US$ 64.777,54</div>
+            <div class="card-footer-data">
+                <span id="market-status" style="color: var(--accent-green);">● Mercado conectado</span>
+                <span>🔄</span>
+            </div>
+        </div>
 
-    <div class="input-group">
-        <label>Sua Dívida Total (US$):</label>
-        <input type="number" id="borrow" value="338.92" step="0.01" oninput="calcular()">
-    </div>
+        <!-- Colateral BTCB (Unificado e corrigido) -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🏦 Colateral BTCB</div>
+                <span>DEPOSITADO</span>
+            </div>
+            <div class="card-main-value" id="collateral-crypto">0.010919 BTCB</div>
+            <div class="card-footer-data">
+                <span id="collateral-fiat">USD 706,42</span>
+                <span id="ltv-value">LTV: 55%</span>
+            </div>
+        </div>
 
-    <div id="result" class="result-box moderate">
-        Fator de Saúde Atual: --
-    </div>
-    
-    <div id="liquidationPrice" class="info">
-        Preço limite de liquidação: US$ --
-    </div>
+        <!-- Dívida Total -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">💼 Dívida total</div>
+                <span>EMPRÉSTIMO</span>
+            </div>
+            <div class="card-main-value" id="total-debt">US$ 393,13</div>
+            <div class="card-footer-data">
+                <span>colateral ponderado</span>
+                <span id="weighted-collateral">US$ 564,28</span>
+            </div>
+        </div>
 
-    <div id="panicPanel" class="panic-box" style="display: none;">
-        <div class="panic-title">🚨 MÓDULO DE CONTINGÊNCIA Ativo</div>
-        <div id="panicInstruction" class="info" style="color: #c9d1d9; margin-top: 0;">Para atingir a Meta de Saúde Segura (1.50):</div>
-        <div id="panicAction" class="panic-value">--</div>
-    </div>
-</div>
-
-<div class="container">
-    <h3>Projeções Automáticas de Queda</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Queda</th>
-                <th>Preço BTC</th>
-                <th>Seu Colateral</th>
-                <th>Fator Saúde</th>
-            </tr>
-        </thead>
-        <tbody id="projectionTable">
-            <!-- Gerado via JavaScript -->
-        </tbody>
-    </table>
-</div>
-
-<script>
-async function atualizarPrecoAPI() {
-    const btn = document.querySelector('.btn-api');
-    btn.innerText = "⏳ Buscando dados do mercado...";
-    try {
-        const resposta = await fetch('https://coingecko.com');
-        const dados = await resposta.json();
-        if(dados.bitcoin && dados.bitcoin.usd) {
-            document.getElementById('btcPrice').value = dados.bitcoin.usd;
-            btn.innerText = "✅ Preço Sincronizado!";
-            calcular();
-            setTimeout(() => { btn.innerText = "🔄 Sincronizar Preço Real do BTC"; }, 3000);
-        }
-    } catch (erro) {
-        console.error(erro);
-        btn.innerText = "❌ Erro ao buscar preço.";
-        setTimeout(() => { btn.innerText = "🔄 Sincronizar Preço Real do BTC"; }, 3000);
-    }
-}
-
-function calcular() {
-    const price = parseFloat(document.getElementById('btcPrice').value) || 0;
-    const balance = parseFloat(document.getElementById('btcBalance').value) || 0;
-    const borrow = parseFloat(document.getElementById('borrow').value) || 0;
-    
-    const factorGarantia = 0.80; 
-    const healthMetaSegura = 1.50; 
-    
-    if (borrow <= 0) {
-        document.getElementById('result').innerText = "Fator de Saúde: ∞";
-        document.getElementById('result').className = "result-box safe";
-        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
-        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
-        document.getElementById('panicPanel').style.display = "none";
-        return;
-    }
-
-    const colateralTotal = balance * price;
-    const hfAtual = (colateralTotal * factorGarantia) / borrow;
-    const liqPrice = borrow / (balance * factorGarantia);
-
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerText = "Fator de Saúde Atual: " + hfAtual.toFixed(2);
-    
-    if (hfAtual >= 1.5) resultDiv.className = "result-box safe";
-    else if (hfAtual >= 1.15) resultDiv.className = "result-box moderate";
-    else resultDiv.className = "result-box danger";
-
-    document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: US$ " + Math.round(liqPrice).toLocaleString('pt-BR');
-
-    const panicPanel = document.getElementById('panicPanel');
-    if (hfAtual < healthMetaSegura) {
-        panicPanel.style.display = "block";
-        
-        const dividaMaxAlvo = (colateralTotal * factorGarantia) / healthMetaSegura;
-        const pagarUSD = borrow - dividaMaxAlvo;
-        
-        const colateralAlvoUSD = (borrow * healthMetaSegura) / factorGarantia;
-        const depositarUSD = colateralAlvoUSD - colateralTotal;
-        const depositarBTC = price > 0 ? (depositarUSD / price) : 0;
-
-        document.getElementById('panicAction').innerHTML = 
-            `Amortizar a dívida em: <span class="text-danger">US$ ${pagarUSD.toFixed(2)}</span><br>` +
-            `OU<br>` +
-            `Depositar colateral: <span class="text-safe">${depositarBTC.toFixed(6)} BTC</span> (~US$ ${depositarUSD.toFixed(2)})`;
-    } else {
-        panicPanel.style.display = "none";
-    }
-
-    const quedas = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50];
-    let tabelaHTML = "";
-
-    quedas.forEach(queda => {
-        const precoProjetado = Math.round(price * (1 - queda));
-        const colateralProjetado = balance * precoProjetado;
-        const hfProjetado = (colateralProjetado * factorGarantia) / borrow;
-
-        let classeStatus = "text-safe";
-        if (hfProjetado < 1.15) {
-            classeStatus = "text-danger";
-        } else if (hfProjetado < 1.50) {
-            classeStatus = "text-warning";
-        }
-
-        tabelaHTML += `
-            <tr>
-                <td>${queda * 100}%</td>
-                <td>US$ ${precoProjetado.toLocaleString('pt-BR')}</td>
-                <td>US$ ${colateralProjetado.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                <td class="${classeStatus}">${hfProjetado.toFixed(2)}</td>
-            </tr>
-        `;
-    });
-
-    document.getElementById('projectionTable').innerHTML = tabelaHTML;
-}
-
-// Inicializa calculando tudo na hora sem travar a tela
-window.onload = function() {
-    calcular();
-};
-</script>
-</body>
-</html>
+        <!-- Limites de Segurança -->
+        <div class="card">
+            <div class="card-header" style="margin-bottom: 2px;">
