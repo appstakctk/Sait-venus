@@ -10,6 +10,7 @@
             background-color: #0b0e11;
             color: #eaedd1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -60,8 +61,25 @@
         .status-badge { padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .healthy { background-color: rgba(2, 192, 118, 0.2); color: #02c076; }
         .danger { background-color: rgba(207, 62, 66, 0.2); color: #cf3e42; }
+
+        /* Estilo da caixa de console técnico */
+        .debug-panel {
+            width: 100%;
+            max-width: 440px;
+            background-color: #000;
+            border: 1px dashed #cf3e42;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 11px;
+            color: #ff5555;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
     </style>
-    <!-- Importação correta do Ethers.js v5 via CDN oficial -->
+    <!-- Importação estável do Ethers.js -->
     <script src="https://cloudflare.com" type="text/javascript"></script>
 </head>
 <body>
@@ -76,7 +94,7 @@
 
     <div class="dashboard">
         <div class="metric">
-            <span>Preço do BTC (Binance Spot):</span>
+            <span>Preço do BTC (Spot):</span>
             <span id="btcPrice" class="value">Buscando...</span>
         </div>
         <div class="metric">
@@ -102,49 +120,56 @@
     </div>
 </div>
 
+<!-- Painel visual para ler o erro exato na tela do celular -->
+<div id="debugLog" class="debug-panel">Console log: Aguardando execução...</div>
+
 <script>
-// Alerta: Sua carteira está pública neste código
 const minhaCarteira = "0x49F8739791713858A6718564f035f8c35905829C";
 
 window.onload = function() {
     sincronizarRede();
-    setInterval(sincronizarRede, 25000); // Executa a cada 25 segundos
+    setInterval(sincronizarRede, 25000); 
 };
 
 async function sincronizarRede() {
     const errorBanner = document.getElementById('errorBanner');
+    const debugLog = document.getElementById('debugLog');
     errorBanner.style.display = 'none';
+    debugLog.style.color = '#55ff55';
+    debugLog.innerText = "Iniciando sincronização...";
 
     try {
-        // 1. Busca o preço atualizado via KuCoin (Livre de erros CORS em navegadores)
-        const btcRes = await fetch("https://kucoin.com");
-        if(!btcRes.ok) throw new Error("Erro ao buscar preço do BTC");
+        // 1. Busca o preço via CoinGecko
+        debugLog.innerText += "\n[1/3] Buscando preço na CoinGecko...";
+        const btcRes = await fetch("https://coingecko.com");
+        if(!btcRes.ok) throw new Error("Falha HTTP na CoinGecko Status: " + btcRes.status);
         const btcData = await btcRes.json();
-        const precoBTC = parseFloat(btcData.data.price);
+        const precoBTC = parseFloat(btcData.bitcoin.usd);
+        debugLog.innerText += ` OK (U$ ${precoBTC})`;
 
-        // 2. Conexão RPC estável com a rede BNB Chain via Ankr
-        const provider = new ethers.providers.JsonRpcProvider("https://ankr.com");
+        // 2. Conexão RPC com a rede BNB Chain
+        debugLog.innerText += "\n[2/3] Conectando ao RPC da BNB Chain...";
+        const provider = new ethers.providers.JsonRpcProvider("https://binance.org");
         
-        // ABI do Comptroller da Venus Protocol
         const vComptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint, uint, uint)"];
         const vComptrollerAddress = "0xfD36E2c2a6789Db23113685031d7F16329158384";
         const contratoVenus = new ethers.Contract(vComptrollerAddress, vComptrollerAbi, provider);
 
-        // Chamada de contrato inteligente
+        // 3. Chamada do Contrato
+        debugLog.innerText += "\n[3/3] Lendo getAccountLiquidity da Venus...";
         const liquidezDaRede = await contratoVenus.getAccountLiquidity(minhaCarteira);
+        debugLog.innerText += " OK.";
         
         // Dados de posição configurados manualmente
         const quantidadeBTCB = 0.008673; 
         const dividaFixa = 318.96; 
         const fatorColateral = 0.80; 
 
-        // Cálculos matemáticos estruturados
         const colateralBruto = quantidadeBTCB * precoBTC;
         const colateralPonderado = colateralBruto * fatorColateral;
         const fatorSaudeReal = colateralPonderado / dividaFixa;
         const pontoDeQuebra = dividaFixa / (quantidadeBTCB * fatorColateral);
 
-        // Atualização da interface web
         document.getElementById('btcPrice').innerText = `U$ ${precoBTC.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         document.getElementById('totalSupply').innerText = `U$ ${colateralBruto.toFixed(2)}`;
         document.getElementById('totalBorrow').innerText = `U$ ${dividaFixa.toFixed(2)}`;
@@ -160,9 +185,17 @@ async function sincronizarRede() {
             statusBadge.className = "status-badge danger";
         }
 
+        debugLog.innerText += "\nSincronização concluída com sucesso!";
+
     } catch (err) {
-        console.error("Erro na sincronização:", err);
-        errorBanner.style.display = 'block'; // Mostra o banner de erro na tela
+        console.error(err);
+        errorBanner.style.display = 'block';
+        debugLog.style.color = '#ff5555';
+        // Captura a mensagem de erro exata e joga na tela
+        debugLog.innerText += "\n\n❌ ERRO DETECTADO:\n" + err.message;
+        if(err.stack) {
+            debugLog.innerText += "\n\nDetalhes do Erro:\n" + err.stack.split('\n')[0];
+        }
     }
 }
 </script>
