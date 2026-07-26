@@ -62,10 +62,11 @@
             position: absolute;
             width: 150px;
             height: 150px;
-            border: 3px dashed var(--accent-green);
+            border: 3px dashed var(--accent-yellow);
             border-radius: 50%;
-            animation: rotateGauge 8s linear infinite, colorPulse 6s ease-in-out infinite;
-            box-shadow: 0 0 15px rgba(158, 255, 0, 0.2);
+            animation: rotateGauge 8s linear infinite;
+            box-shadow: 0 0 15px rgba(255, 208, 0, 0.2);
+            transition: all 0.5s ease;
         }
 
         .gauge-content {
@@ -86,24 +87,21 @@
         .gauge-value {
             font-size: 42px;
             font-weight: bold;
-            color: var(--accent-green);
+            color: var(--accent-yellow);
             margin: 5px 0;
+            transition: color 0.5s ease;
         }
 
         .gauge-status {
             font-size: 10px;
-            color: var(--accent-green);
+            color: var(--accent-yellow);
             font-weight: bold;
+            text-transform: uppercase;
         }
 
         @keyframes rotateGauge {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
-        }
-
-        @keyframes colorPulse {
-            0%, 100% { border-color: #9eff00; }
-            50% { border-color: #ffd000; }
         }
 
         .card-header {
@@ -127,18 +125,21 @@
         }
 
         .card-footer-data {
-            font-size: 10px;
+            font-size: 11px;
             color: var(--text-secondary);
-            word-break: break-all;
+            display: flex;
+            justify-content: space-between;
         }
 
         .alert-box {
-            background-color: #162218;
+            background-color: #221f14;
             border-radius: 12px;
             padding: 12px;
             margin-top: 15px;
             font-size: 12px;
             text-align: center;
+            border: 1px solid #332d18;
+            color: #ffe680;
         }
 
         .stress-table {
@@ -152,6 +153,7 @@
             color: var(--text-secondary);
             text-align: left;
             padding-bottom: 10px;
+            text-transform: uppercase;
         }
 
         .stress-table td {
@@ -186,114 +188,108 @@
 
     <div class="dashboard">
 
-        <!-- Fator de Saúde Ativo -->
+        <!-- Fator de Saúde Inteligente -->
         <div class="card gauge-container">
             <div class="gauge-wrapper">
-                <div class="gauge-circle-animated"></div>
+                <div class="gauge-circle-animated" id="gauge-circle"></div>
                 <div class="gauge-content">
                     <span class="gauge-label">Fator de Saúde</span>
-                    <span class="gauge-value" id="health-factor">1.44</span>
-                    <span class="gauge-status" id="health-status">MONITORANDO</span>
+                    <span class="gauge-value" id="health-factor">1.43</span>
+                    <span class="gauge-status" id="health-status">MODERADO</span>
                 </div>
             </div>
-            <div class="alert-box" id="wallet-info">
-                Buscando contratos da Venus...
+            <div class="alert-box" id="risk-alert">
+                ⚠️ Risco Moderado: Acompanhe as variações do mercado de perto.
             </div>
         </div>
 
-        <!-- Balanço de Fornecimento em vBTC (Colateral Garantido) -->
+        <!-- Colateral Total (BTCB Fornecido) -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Garantia Fornecida (vBTC)</div>
-                <span>Rede: BNB Chain</span>
+                <div class="card-title">Garantia Fornecida (BTCB)</div>
+                <span id="btcb-balance-crypto">0.010918 BTCB</span>
             </div>
-            <div class="card-main-value" id="wallet-vbtc-balance">0.0000 vBTC</div>
+            <div class="card-main-value" id="total-supply-usd">$705.37</div>
             <div class="card-footer-data">
-                <strong>Contrato Monitorado:</strong> <span>0x49F87397...829C</span>
+                <span>Net Worth: $312.26</span>
+                <span>Uso de Linha: 70%</span>
             </div>
         </div>
 
-        <!-- Monitor de Cotação e Simulação BTC Spot -->
+        <!-- Dívida Ativa -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Cenários de Risco Alternativos (BTC/USDT)</div>
+                <div class="card-title">Total Emprestado</div>
+                <span>Barreira de Liq: $564.28</span>
+            </div>
+            <div class="card-main-value" id="total-borrow-usd">$393.11</div>
+            <div class="card-footer-data">
+                <span>Net APY: -2.1%</span>
+                <span>Carteira: 0x49F8...829C</span>
+            </div>
+        </div>
+
+        <!-- Simulação Dinâmica de Risco Baseada nos Dados Printados -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Teste de Estresse (Liquidação do BTC)</div>
             </div>
             <table class="stress-table">
                 <thead>
                     <tr>
-                        <th>Variação</th>
-                        <th>Cotação Alvo</th>
-                        <th class="col-right">Fator Calculado</th>
+                        <th>Cenário</th>
+                        <th>Preço BTC</th>
+                        <th class="col-right">Fator Novo</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Preço de Mercado</td>
+                        <td>Atual Mercado</td>
                         <td class="price-val" id="btc-current">Carregando...</td>
-                        <td class="col-right"><span class="health-badge h-green">1.44</span></td>
+                        <td class="col-right"><span class="health-badge" id="hf-badge-current">1.43</span></td>
                     </tr>
                     <tr>
-                        <td>Desvalorização -15%</td>
+                        <td>Queda -15%</td>
                         <td class="price-val" id="btc-drop15">Calculando...</td>
-                        <td class="col-right"><span class="health-badge h-yellow">1.22</span></td>
+                        <td class="col-right"><span class="health-badge" id="hf-badge-drop15">1.21</span></td>
                     </tr>
                     <tr>
-                        <td>Desvalorização -30%</td>
+                        <td>Queda -30%</td>
                         <td class="price-val" id="btc-drop30">Calculando...</td>
-                        <td class="col-right"><span class="health-badge h-red">1.01</span></td>
+                        <td class="col-right"><span class="health-badge" id="hf-badge-drop30">1.00</span></td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="footer-text">
-            Integração síncrona via RPC Nodes oficiais e contratos descentralizados da BNB Chain.
+            Dados calibrados via API Binance Spot. Risco de liquidação iminente caso o Fator atinja 1.00.
         </div>
 
     </div>
 
     <script>
-        // Definição das constantes estruturais do ecossistema DeFi
-        const enderecoCarteira = "0x49F8739791713858A6718564f035f8c35905829C";
-        const contratoVBTC = "0x882c173bc7ff3b7786ca16dfed3dfffb9ee7847b"; // Endereço oficial do vBTC no Venus Protocol
+        // Dados estáticos reais extraídos do seu print da plataforma Venus
+        const carteiraBtcBalance = 0.010918; 
+        const dividaFixaUsd = 393.11;
+        const limiteLiquidacaoFator = 0.80; // Taxa de colateralização média da Venus para BTCB (Liquidation Threshold ~80%)
 
-        // 1. Busca e tratamento da variação cambial do Bitcoin (Binance API)
-        async function carregarPrecoBTC() {
+        async function recalcularPainelDeFi() {
             try {
+                // Obtendo a cotação em tempo real diretamente do livro de ofertas da Binance
                 const res = await fetch('https://binance.com');
                 const dados = await res.json();
+                
                 if(dados && dados.price) {
-                    const preco = parseFloat(dados.price);
+                    const precoBtcAtual = parseFloat(dados.price);
                     
-                    document.getElementById('btc-current').innerText = preco.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-                    document.getElementById('btc-drop15').innerText = (preco * 0.85).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-                    document.getElementById('btc-drop30').innerText = (preco * 0.70).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-                }
-            } catch (e) {
-                console.error("Erro na API de preços:", e);
-                document.getElementById('btc-current').innerText = "Erro Conexão";
-            }
-        }
+                    // 1. Atualiza os preços calculados na tabela de estresse
+                    const precoDrop15 = precoBtcAtual * 0.85;
+                    const precoDrop30 = precoBtcAtual * 0.70;
 
-        // 2. Chamada de leitura direta de Contrato ERC-20/BEP-20 (Função balanceOf) via RPC
-        async function carregarSaldoVBTC() {
-            try {
-                // Keccak-256 da assinatura da função "balanceOf(address)" -> 0x70a08231
-                // Encodado com o endereço da carteira preenchido com zeros à esquerda até completar 64 caracteres
-                const dataParam = "0x70a08231" + enderecoCarteira.substring(2).padStart(64, '0');
+                    document.getElementById('btc-current').innerText = precoBtcAtual.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+                    document.getElementById('btc-drop15').innerText = precoDrop15.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+                    document.getElementById('btc-drop30').innerText = precoDrop30.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
 
-                const payload = {
-                    jsonrpc: "2.0",
-                    method: "eth_call",
-                    params: [
-                        {
-                            to: contratoVBTC,
-                            data: dataParam
-                        },
-                        "latest"
-                    ],
-                    id: 1
-                };
-
-                const res = await fetch('https://binance.org', {
-                    method: 'POST',
+                    // 2. Calcula dinamicamente o novo fornecimento em USD baseado no mercado
+                    const novoSupplyUsd = carteiraBtcBalance * precoBtcAtual;
