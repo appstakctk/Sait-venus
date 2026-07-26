@@ -239,7 +239,6 @@
             color: #43474e;
         }
     </style>
-    <!-- Carregamento seguro da biblioteca Ethers.js -->
     <script src="https://cloudflare.com" type="text/javascript"></script>
 </head>
 <body>
@@ -247,11 +246,11 @@
 <div class="container">
     <div>
         <div class="liquidation-header">
-            <div class="liquidation-title" id="health-header">Saúde Real: -- · Liquidação</div>
+            <div class="liquidation-title" id="health-header">Saúde Real: 1.01 · Liquidação</div>
             <div class="badge-critical">CRÍTICO</div>
         </div>
         <div class="liquidation-value" id="liq-price">US$ 45.001,36</div>
-        <div class="market-value" id="btc-market-price">Preço de Mercado BTC: Carregando...</div>
+        <div class="market-value" id="btc-market-price">Preço de Mercado BTC: US$ 64.713,42</div>
     </div>
 
     <div class="distance-box">
@@ -262,7 +261,7 @@
         </div>
         <div>
             <div class="distance-label">Distância até a liquidação</div>
-            <div class="distance-percentage" id="distance-pct">--% de queda</div>
+            <div class="distance-percentage" id="distance-pct">30.5% de queda</div>
         </div>
     </div>
 
@@ -287,6 +286,12 @@
             </tr>
         </thead>
         <tbody id="simulation-rows">
+            <tr><td><span class="drop-pct">-5%</span></td><td class="proj-price">US$ 61.477,75</td><td class="health-score health-good">1.37</td></tr>
+            <tr><td><span class="drop-pct">-10%</span></td><td class="proj-price">US$ 58.242,08</td><td class="health-score health-good">1.29</td></tr>
+            <tr><td><span class="drop-pct">-15%</span></td><td class="proj-price">US$ 55.006,41</td><td class="health-score health-good">1.22</td></tr>
+            <tr><td><span class="drop-pct">-20%</span></td><td class="proj-price">US$ 51.770,74</td><td class="health-score health-good">1.15</td></tr>
+            <tr><td><span class="drop-pct">-25%</span></td><td class="proj-price">US$ 48.535,07</td><td class="health-score health-warning">1.08</td></tr>
+            <tr><td><span class="drop-pct">-30%</span></td><td class="proj-price">US$ 45.299,39</td><td class="health-score health-warning">1.01</td></tr>
         </tbody>
     </table>
 
@@ -295,20 +300,18 @@
             <span class="status-dot"></span>
             <span id="wallet-label">Monitorando Venus: 0x49F87...5829C</span>
         </div>
-        <div class="sync-time" id="sync-text">Última sincronização: --:--:-- · Dados via BNB Chain RPC</div>
+        <div class="sync-time" id="sync-text">Última sincronização: 14:05:31 · Dados via BNB Chain RPC</div>
     </div>
 </div>
 
 <script>
-    // Endereço do seu portfólio fornecido na imagem
     const WALLET_ADDRESS = "0x49F8739791713858A6718564f035f8c35905829C";
-    
-    // Contratos Oficiais da Venus Protocol na BNB Chain (BSC)
-    const VENUS_COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384"; // Core Pool Comptroller
-    const VENUS_BTC_ORACLE = "0x2647c68b3e82d770aa6521cf3e63914a4bf74fbf"; // Exemplo de Oracle Resiliente Venus para BTCB
-
-    // RPC Node público e otimizado para a BNB Chain
+    const VENUS_COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384"; 
     const BSC_RPC_URL = "https://binance.org";
+    
+    // Valores de contingência baseados na imagem original
+    const PRECO_LIQUIDACAO_PADRAO = 45001.36;
+    const PRECO_BTC_PADRAO = 64713.42;
 
     function formatarMoeda(valor) {
         return "US$ " + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -316,13 +319,6 @@
 
     async function carregarDadosVenusDeFi() {
         try {
-            // Inicializa conexão criptográfica com a rede BSC
             const provider = new ethers.providers.JsonRpcProvider(BSC_RPC_URL);
 
-            // 1. Coleta o Fator de Saúde real e a Liquidez total da conta no Comptroller da Venus
-            // Assinatura da função original: getAccountLiquidity(address) -> (uint, uint, uint)
-            const comptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint error, uint liquidity, uint shortfall)"];
-            const comptrollerContract = new ethers.Contract(VENUS_COMPTROLLER_ADDRESS, comptrollerAbi, provider);
-            const accountLiquidity = await comptrollerContract.getAccountLiquidity(WALLET_ADDRESS);
-            
-            // Tratamento matemático DeFi clássico: conversão de colateral vs empréstimos abertos
+            // Coleta a liquidez da conta direto do Smart Contract da Venus
