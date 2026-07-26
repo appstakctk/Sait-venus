@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Liquidação Cripto - Automatizado</title>
+    <title>Painel de Liquidação Cripto - Corrigido</title>
     <style>
         :root {
             --bg-color: #0d0e10;
@@ -237,7 +237,6 @@
 <body>
 
 <div class="container">
-    <!-- Bloco Superior -->
     <div>
         <div class="liquidation-header">
             <div class="liquidation-title">Saúde 1,00 · Liquidação</div>
@@ -246,7 +245,6 @@
         <div class="liquidation-value" id="liq-price">Carregando...</div>
     </div>
 
-    <!-- Indicador de Distância -->
     <div class="distance-box">
         <div class="distance-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -259,7 +257,6 @@
         </div>
     </div>
 
-    <!-- Cabeçalho do Teste de Estresse -->
     <div>
         <div class="stress-test-tag">Teste de Estresse</div>
         <div class="stress-test-title-container">
@@ -272,7 +269,6 @@
         </div>
     </div>
 
-    <!-- Tabela de Simulação Dinâmica -->
     <table class="simulation-table">
         <thead>
             <tr>
@@ -282,11 +278,9 @@
             </tr>
         </thead>
         <tbody id="simulation-rows">
-            <!-- Gerado via JavaScript -->
         </tbody>
     </table>
 
-    <!-- Rodapé Dinâmico -->
     <div class="footer-monitor">
         <div class="status-container">
             <span class="status-dot"></span>
@@ -297,10 +291,8 @@
 </div>
 
 <script>
-    // Configurações baseadas na sua imagem
     const PRECO_LIQUIDACAO = 45001.36; 
 
-    // Formatador de moeda USD
     const formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -309,7 +301,6 @@
 
     async function fetchBitcoinPrice() {
         try {
-            // Busca o preço atualizado do Bitcoin utilizando a API pública CoinGecko
             const response = await fetch('https://coingecko.com');
             const data = await response.json();
             const btcPrice = data.bitcoin.usd;
@@ -321,21 +312,35 @@
     }
 
     function updateDashboard(currentBtcPrice) {
-        // 1. Atualiza Preço de liquidação no topo
         document.getElementById('liq-price').innerText = formatter.format(PRECO_LIQUIDACAO).replace('$', 'US$ ');
 
-        // 2. Calcula a distância real em % até a liquidação baseada no preço atual
         const distancePct = ((currentBtcPrice - PRECO_LIQUIDACAO) / currentBtcPrice) * 100;
-        document.getElementById('distance-pct').innerText = `${distancePct.toFixed(1)}% de queda`;
+        document.getElementById('distance-pct').innerText = distancePct.toFixed(1) + "% de queda";
 
-        // 3. Atualiza a tabela com o preço real atual do BTC simulando as quedas
-        const drops = [5, 10, 15, 20, 25, 30];
+        const drops =;
         const tbody = document.getElementById('simulation-rows');
-        tbody.innerHTML = ''; // Limpa as linhas antigas
+        tbody.innerHTML = ''; 
 
         drops.forEach(drop => {
             const projectedPrice = currentBtcPrice * (1 - (drop / 100));
-            
-            // Fórmula aproximada de fator de saúde baseado na proximidade da liquidação
             const healthFactor = projectedPrice / PRECO_LIQUIDACAO;
             const isWarning = healthFactor <= 1.10;
+            const healthClass = isWarning ? 'health-warning' : 'health-good';
+
+            const row = '<tr>' +
+                '<td><span class="drop-pct">-' + drop + '%</span></td>' +
+                '<td class="proj-price">' + formatter.format(projectedPrice).replace('$', 'US$ ') + '</td>' +
+                '<td class="health-score ' + healthClass + '">' + healthFactor.toFixed(2) + '</td>' +
+                '</tr>';
+            tbody.innerHTML += row;
+        });
+
+        const now = new Date();
+        const timeString = now.toTimeString().split(' ')[0];
+        document.getElementById('sync-text').innerText = 'Última sincronização: ' + timeString + ' · Dados atualizados automaticamente';
+    }
+
+    fetchBitcoinPrice();
+    setInterval(fetchBitcoinPrice, 30000);
+</script>
+
