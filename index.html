@@ -3,318 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Venus Risk Terminal - Sentinela</title>
+    <title>Painel de Saúde Financeira - Venus Protocol</title>
     <style>
         :root {
-            --bg-color: #0d0e10;
-            --card-bg: #14161a;
-            --primary-green: #90e050;
-            --text-main: #ffffff;
-            --text-muted: #848e9c;
-            --border-color: #2b2f36;
-            --risk-orange: #f0a500;
-            --risk-red: #f6465d;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --bg-color: #0b0f0c;
+            --card-bg: #131a15;
+            --text-primary: #ffffff;
+            --text-secondary: #707a73;
+            --accent-green: #9eff00;
+            --accent-yellow: #ffd000;
+            --accent-red: #ff4d4d;
+            --border-color: #1f2a22;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-main);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
         }
 
-        .container {
+        .dashboard {
             width: 100%;
-            max-width: 480px;
+            max-width: 400px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 15px;
         }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-        }
-
-        .logo {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: var(--text-main);
-        }
-
-        .logo span {
-            color: var(--primary-green);
-            display: block;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-        }
-
-        .wallet-input-section {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        input {
-            flex: 1;
-            background: #1e222a;
-            border: 1px solid var(--border-color);
-            padding: 12px;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.9rem;
-        }
-
-        .monitor-btn {
-            background: var(--primary-green);
-            border: none;
-            padding: 0 16px;
-            border-radius: 8px;
-            font-weight: bold;
-            color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-        }
-
-        .main-headline h1 {
-            font-size: 1.8rem;
-            line-height: 1.2;
-        }
-
-        .main-headline span {
-            color: var(--primary-green);
-            display: block;
-        }
-
-        .health-factor-card {
-            background: var(--card-bg);
+        .card {
+            background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 30px;
-            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        .circle-container {
+        /* Top Gauge */
+        .gauge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 10px;
+        }
+
+        .gauge-circle {
             width: 150px;
             height: 150px;
-            border: 4px solid var(--border-color);
+            border: 2px dashed var(--accent-green);
             border-radius: 50%;
-            margin: 0 auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            border-top-color: var(--risk-orange);
+            position: relative;
         }
 
-        .health-value {
-            font-size: 2.2rem;
-            font-weight: bold;
-            color: var(--primary-green);
-        }
-
-        .health-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
+        .gauge-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        .metric-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .metric-title {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .metric-value {
-            font-size: 1.4rem;
+        .gauge-value {
+            font-size: 42px;
             font-weight: bold;
+            color: var(--accent-green);
+            margin: 5px 0;
         }
 
-        .section-title {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            color: var(--primary-green);
-            margin-top: 8px;
+        .gauge-status {
+            font-size: 10px;
+            color: var(--accent-green);
+            font-weight: bold;
             letter-spacing: 0.5px;
         }
 
-        .decision-box {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .decision-item {
+        /* Row Cards */
+        .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #1e222a;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
         }
 
-        .decision-item:last-child {
-            border-bottom: none;
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #d1d5d2;
         }
 
-        .stress-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            overflow: hidden;
+        .card-main-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
 
-        .stress-table th, .stress-table td {
-            padding: 10px 12px;
-            text-align: left;
-            font-size: 0.85rem;
+        .card-footer-data {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
         }
 
-        .stress-table th {
-            color: var(--text-muted);
-            font-weight: normal;
-            border-bottom: 1px solid var(--border-color);
+        /* Decision Points Timeline */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+            position: relative;
+            padding-left: 15px;
         }
 
-        .stress-table td {
-            border-bottom: 1px solid #1e222a;
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 10px;
+            bottom: 10px;
+            width: 2px;
+            background: #233026;
+        }
+
+        .timeline-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -15px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: grey;
+            top: 14px;
+        }
+
+        .dot-green { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+        .dot-yellow { background: var(--accent-yellow); }
+        .dot-red { background: var(--accent-red); }
+
+        .timeline-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timeline-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .timeline-value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 2px;
         }
 
         .badge {
-            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .badge-green { background: #1a2e1d; color: var(--accent-green); }
+        .badge-yellow { background: #2e2a14; color: var(--accent-yellow); }
+        .badge-red { background: #331414; color: var(--accent-red); }
+
+        .alert-box {
+            background-color: #162218;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .alert-box span {
+            color: var(--accent-green);
             font-weight: bold;
         }
 
-        .badge-green { background: rgba(144, 224, 80, 0.2); color: var(--primary-green); }
-        .badge-orange { background: rgba(240, 165, 0, 0.2); color: var(--risk-orange); }
-        .badge-red { background: rgba(246, 70, 93, 0.2); color: var(--risk-red); }
+        /* Stress Test Table */
+        .stress-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .stress-table th {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: left;
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stress-table td {
+            padding: 10px 0;
+            font-size: 13px;
+            border-bottom: 1px solid #17221a;
+        }
+
+        .stress-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .col-right { text-align: right; }
+        .drop-val { color: var(--text-secondary); }
+        .price-val { font-weight: 600; }
+        
+        .health-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .h-green { background: #1a2e1d; color: var(--accent-green); }
+        .h-yellow { background: #2e2a14; color: var(--accent-yellow); }
+        .h-red { background: #331414; color: var(--accent-red); }
+
+        .footer-text {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <div class="logo">Sentinela <span>Venus Risk Terminal</span></div>
-    </header>
+    <div class="dashboard">
 
-    <section class="wallet-input-section">
-        <label style="font-size: 0.85rem; color: var(--text-muted);">Insira o endereço da sua carteira BSC/EVM:</label>
-        <div class="input-group">
-            <input type="text" placeholder="0x..." value="0x49F8739791713858A67185031d7F16329158384">
-            <div class="monitor-btn">Monitorar</div>
-        </div>
-    </section>
-
-    <div class="main-headline">
-        <h1>Risco sob controle. <span>Antes do mercado virar.</span></h1>
-    </div>
-
-    <!-- Painel Aberto de Forma Nativa por CSS Sem Javascript para Não Bloquear no Servidor -->
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-        <div class="health-factor-card">
-            <div class="circle-container">
-                <span class="health-label">Fator de Saúde</span>
-                <span class="health-value">1.46</span>
-                <span style="color: var(--risk-orange); font-size: 0.7rem; font-weight: bold;">ATENÇÃO / MONITORAR</span>
+        <!-- Fator de Saúde -->
+        <div class="gauge-container">
+            <div class="gauge-circle" id="gauge-border">
+                <span class="gauge-label">Fator de Saúde</span>
+                <span class="gauge-value" id="health-factor">-,--</span>
+                <span class="gauge-status" id="health-status">CARREGANDO...</span>
             </div>
         </div>
 
-        <div class="metric-card">
-            <div class="metric-title"><span>Total de Colateral Garantido</span> <span>BSC NETWORK</span></div>
-            <div class="metric-value">US$ 565,80</div>
-        </div>
-
-        <div class="metric-card">
-            <div class="metric-title"><span>Dívida Total Ativa</span> <span>V. DE LIQUIDAÇÃO</span></div>
-            <div class="metric-value">US$ 320,26</div>
-        </div>
-
-        <div>
-            <div class="section-title">Limites de Segurança</div>
-            <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 8px;">Pontos de decisão</div>
-            <div class="decision-box">
-                <div class="decision-item">
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Preço Atual BTC</div>
-                        <div style="font-weight: bold;">US$ 65.039,07</div>
-                    </div>
-                    <span class="badge badge-green">ATUAL</span>
-                </div>
-                <div class="decision-item">
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Alerta 1.40 - Ponto de Atenção</div>
-                        <div style="font-weight: bold;">US$ 62.378,16</div>
-                    </div>
-                    <span class="badge badge-orange">ATENÇÃO</span>
-                </div>
-                <div class="decision-item">
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Alerta 1.10 - Liquidação</div>
-                        <div style="font-weight: bold;">US$ 43.917,02</div>
-                    </div>
-                    <span class="badge badge-red">CRÍTICO</span>
-                </div>
+        <!-- BTC / USDT -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🪙 BTC / USDT</div>
+                <span>PERMANENTE: BTC/USDT</span>
+            </div>
+            <div class="card-main-value" id="btc-price">US$ --.---,--</div>
+            <div class="card-footer-data">
+                <span id="market-status" style="color: var(--text-secondary);">● Conectando...</span>
+                <span>🔄</span>
             </div>
         </div>
 
-        <div>
-            <div class="section-title">Teste de Estresse</div>
-            <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 8px;">Se o BTC cair...</div>
-            <table class="stress-table">
-                <thead>
-                    <tr>
-                        <th>QUEDA</th>
-                        <th>PREÇO PROJETADO</th>
-                        <th>FATOR</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>-5%</td>
-                        <td>US$ 61.787,12</td>
-                        <td style="color: var(--risk-orange); font-weight: bold;">1.39</td>
-                    </tr>
-                    <tr>
-                        <td>-10%</td>
-                        <td>US$ 58.535,16</td>
-                        <td style="color: var(--risk-orange); font-weight: bold;">1.32</td>
-                    </tr>
-                    <tr>
-                        <td>-15%</td>
-                        <td>US$ 55.283,21</td>
-                        <td style="color: var(--risk-orange); font-weight: bold;">1.25</td>
-                    </tr>
+        <!-- Colateral BTCB -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🏦 Colateral BTCB</div>
+                <span>DEPOSITADO</span>
+            </div>
+            <div class="card-main-value" id="collateral-crypto">-,------ BTCB</div>
+            <div class="card-footer-data">
+                <span id="collateral-fiat">USD ---,--</span>
+                <span id="ltv-value">LTV: --%</span>
+            </div>
+        </div>
+
+        <!-- Dívida Total -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">💼 Dívida total</div>
+                <span>EMPRÉSTIMO</span>
+            </div>
+            <div class="card-main-value" id="total-debt">US$ ---,--</div>
+            <div class="card-footer-data">
+                <span>colateral ponderado</span>
+                <span id="weighted-collateral">US$ ---,--</span>
+            </div>
+        </div>
+
+        <!-- Limites de Segurança -->
+        <div class="card">
+            <div class="card-header" style="margin-bottom: 2px;">
+                <span style="color: var(--accent-green); font-size: 10px; letter-spacing: 1px;">LIMITES DE SEGURANÇA</span>
+                <span>⏱️</span>
+            </div>
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">Pontos de decisão</div>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-green"></div>
+                    <div class="timeline-info">
+                        <span class="timeline-label">Preço atual</span>
+                        <span class="timeline-value" id="timeline-current-price">US$ --.---,--</span>
+                    </div>
+                    <span class="badge badge-green">Agora</span>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-yellow"></div>
+                    <div class="timeline-info">
+                        <span class="timeline-label">Saúde 1.40 - Ponto de atenção</span>
+                        <span class="timeline-value" id="price-attention">US$ --.---,--</span>
+                    </div>
+                    <span class="badge badge-yellow">Atenção</span>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-red"></div>
+                    <div class="timeline-info">
