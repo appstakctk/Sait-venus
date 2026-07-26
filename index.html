@@ -3,336 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Saúde Financeira - Venus Protocol</title>
+    <title>Painel de Liquidação Cripto</title>
     <style>
         :root {
-            --bg-color: #0b0f0c;
-            --card-bg: #131a15;
-            --text-primary: #ffffff;
-            --text-secondary: #707a73;
-            --accent-green: #9eff00;
-            --accent-yellow: #ffd000;
-            --accent-red: #ff4d4d;
-            --border-color: #1f2a22;
+            --bg-color: #0b0c0d;
+            --card-bg: #111315;
+            --text-main: #ffffff;
+            --text-muted: #646a73;
+            --text-green: #9eff00;
+            --text-red: #ff3b30;
+            --border-color: #1c1f22;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
+            color: var(--text-main);
             display: flex;
             justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        .dashboard {
+        .container {
             width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .card {
+            max-width: 450px;
             background-color: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px;
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Top Gauge Animado */
-        .gauge-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 30px 10px;
-        }
-
-        .gauge-wrapper {
-            position: relative;
-            width: 160px;
-            height: 160px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .gauge-circle-animated {
-            position: absolute;
-            width: 150px;
-            height: 150px;
-            border: 3px dashed var(--accent-green);
-            border-radius: 50%;
-            animation: rotateGauge 8s linear infinite, colorPulse 6s ease-in-out infinite;
-            box-shadow: 0 0 15px rgba(158, 255, 0, 0.2);
-            transition: border-color 0.5s ease, box-shadow 0.5s ease;
-        }
-
-        .gauge-content {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 2;
-        }
-
-        .gauge-label {
-            font-size: 10px;
-            color: var(--text-secondary);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .gauge-value {
-            font-size: 42px;
-            font-weight: bold;
-            color: var(--accent-green);
-            margin: 5px 0;
-        }
-
-        .gauge-status {
-            font-size: 10px;
-            color: var(--accent-green);
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-
-        @keyframes rotateGauge {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes colorPulse {
-            0% { border-color: #9eff00; box-shadow: 0 0 15px rgba(158, 255, 0, 0.4); }
-            25% { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
-            50% { border-color: #b600ff; box-shadow: 0 0 15px rgba(182, 0, 255, 0.4); }
-            75% { border-color: #ffd000; box-shadow: 0 0 15px rgba(255, 208, 0, 0.4); }
-            100% { border-color: #9eff00; box-shadow: 0 0 15px rgba(158, 255, 0, 0.4); }
-        }
-
-        /* Row Cards */
-        .card-header {
+        /* Top Liquidation Block */
+        .liquidation-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            position: relative;
         }
 
-        .card-title {
+        .liquidation-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
             display: flex;
             align-items: center;
             gap: 6px;
-            font-weight: 600;
-            color: #d1d5d2;
         }
 
-        .card-main-value {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .card-footer-data {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-
-        /* Decision Points Timeline */
-        .timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 15px;
-            position: relative;
-            padding-left: 15px;
-        }
-
-        .timeline::before {
+        .liquidation-title::before {
             content: '';
-            position: absolute;
-            left: 4px;
-            top: 10px;
-            bottom: 10px;
-            width: 2px;
-            background: #233026;
-        }
-
-        .timeline-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-        }
-
-        .timeline-dot {
-            position: absolute;
-            left: -15px;
-            width: 10px;
-            height: 10px;
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-red);
             border-radius: 50%;
-            background: grey;
-            top: 14px;
+            box-shadow: 0 0 8px var(--text-red);
         }
 
-        .dot-green { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-        .dot-yellow { background: var(--accent-yellow); }
-        .dot-red { background: var(--accent-red); }
-
-        .timeline-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .timeline-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-
-        .timeline-value {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 2px;
-        }
-
-        .badge {
+        .badge-critical {
+            background-color: rgba(255, 59, 48, 0.15);
+            color: var(--text-red);
             font-size: 10px;
             font-weight: bold;
             padding: 4px 8px;
             border-radius: 4px;
-            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .badge-green { background: #1a2e1d; color: var(--accent-green); }
-        .badge-yellow { background: #2e2a14; color: var(--accent-yellow); }
-        .badge-red { background: #331414; color: var(--accent-red); }
+        .liquidation-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
 
-        .alert-box {
-            background-color: #162218;
+        /* Distance Box */
+        .distance-box {
+            background-color: rgba(158, 255, 0, 0.03);
+            border: 1px solid rgba(158, 255, 0, 0.15);
             border-radius: 12px;
-            padding: 12px;
-            margin-top: 15px;
+            padding: 16px;
+            margin-bottom: 32px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 13px;
+            gap: 12px;
         }
 
-        .alert-box span {
-            color: var(--accent-green);
-            font-weight: bold;
+        .distance-icon {
+            color: var(--text-green);
+            display: flex;
+            align-items: center;
         }
 
-        /* Stress Test Table */
-        .stress-table {
+        .distance-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .distance-percentage {
+            color: var(--text-green);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Stress Test Section */
+        .stress-test-title-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stress-test-tag {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-green);
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stress-test-main-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .lightning-icon {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        /* Table Simulation */
+        .simulation-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .stress-table th {
-            font-size: 10px;
-            color: var(--text-secondary);
-            text-align: left;
-            padding-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        .stress-table td {
-            padding: 10px 0;
             font-size: 13px;
-            border-bottom: 1px solid #17221a;
         }
 
-        .stress-table tr:last-child td {
+        .simulation-table th {
+            text-align: left;
+            color: var(--text-muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .simulation-table th:nth-child(2) {
+            text-align: right;
+        }
+
+        .simulation-table th:nth-child(3) {
+            text-align: right;
+        }
+
+        .simulation-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            vertical-align: middle;
+        }
+
+        .simulation-table tr:last-child td {
             border-bottom: none;
         }
 
-        .col-right { text-align: right; }
-        .drop-val { color: var(--text-secondary); }
-        .price-val { font-weight: 600; }
-        
-        .health-badge {
+        .drop-pct {
+            color: var(--text-muted);
+            background-color: rgba(255,255,255,0.04);
+            padding: 6px 8px;
+            border-radius: 6px;
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 11px;
-        }
-        .h-green { background: #1a2e1d; color: var(--accent-green); }
-        .h-yellow { background: #2e2a14; color: var(--accent-yellow); }
-        .h-red { background: #331414; color: var(--accent-red); }
-
-        .footer-text {
+            font-weight: 500;
+            min-width: 50px;
             text-align: center;
+        }
+
+        .proj-price {
+            text-align: right;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .health-score {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .health-good {
+            color: #e0a943;
+        }
+
+        .health-warning {
+            color: #d65456;
+            background-color: rgba(214, 84, 86, 0.05);
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+
+        /* Footer Monitoring */
+        .footer-monitor {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .wallet-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 15px;
-            line-height: 1.5;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #52c41a;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .wallet-address {
+            color: #8c939d;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .wallet-address:hover {
+            color: var(--text-main);
+        }
+
+        .sync-info {
+            font-size: 10px;
+            color: #43474e;
+            line-height: 1.4;
+        }
+
+        /* SVG Icon Helpers */
+        .icon-svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
+<div class="container">
+    <!-- Top Block -->
+    <div>
+        <div class="liquidation-header">
+            <div class="liquidation-title">Saúde 1,00 · Liquidação</div>
+            <div class="badge-critical">CRÍTICO</div>
+        </div>
+        <div class="liquidation-value">US$ 45.001,36</div>
+    </div>
 
-        <!-- Fator de Saúde com Círculo Animado -->
-        <div class="gauge-container">
-            <div class="gauge-wrapper">
-                <div class="gauge-circle-animated"></div>
-                <div class="gauge-content">
-                    <span class="gauge-label">Fator de Saúde</span>
-                    <span class="gauge-value" id="health-factor">1.44</span>
-                    <span class="gauge-status" id="health-status">POSIÇÃO SAUDÁVEL</span>
-                </div>
+    <!-- Distance Indicator -->
+    <div class="distance-box">
+        <div class="distance-icon">
+            <svg class="icon-svg" viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zm0-18.3l6.5 2.4v5.9c0 4.5-5.3 7.9-6.5 8.7-1.2-.8-6.5-4.2-6.5-8.7V6.1L12 3.7z"/>
+            </svg>
+        </div>
+        <div>
+            <div class="distance-label">Distância até a liquidação</div>
+            <div class="distance-percentage">30.5% de queda</div>
+        </div>
+    </div>
+
+    <!-- Stress Test Header -->
+    <div>
+        <div class="stress-test-tag">Teste de Estresse</div>
+        <div class="stress-test-title-container">
+            <div class="stress-test-main-title">Se o BTC cair...</div>
+            <div class="lightning-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
             </div>
         </div>
+    </div>
 
-        <!-- BTC / USDT -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">🪙 BTC / USDT</div>
-                <span>PERMANENTE: BTC/USDT</span>
-            </div>
-            <div class="card-main-value" id="btc-price">US$ 64.777,54</div>
-            <div class="card-footer-data">
-                <span id="market-status" style="color: var(--accent-green);">● Mercado conectado</span>
-                <span>🔄</span>
-            </div>
-        </div>
+    <!-- Table Simulator -->
+    <table class="simulation-table">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Queda</th>
+                <th style="width: 50%; text-align: right;">Preço Projetado</th>
+                <th style="width: 25%; text-align: right;">Saúde</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="drop-pct">-5%</span></td>
+                <td class="proj-price">US$ 61.477,75</td>
+                <td class="health-score health-good">1.37</td>
+            </tr>
+            <tr>
+                <td><span class="drop-pct">-10%</span></td>
+                <td class="proj-price">US$ 58.242,08</td>
+                <td class="health-score health-good">1.29</td>
+            </tr>
+            <tr>
+                <td><span class="drop-pct">-15%</span></td>
+                <td class="proj-price">US$ 55.006,41</td>
+                <td class="health-score health-good">1.22</td>
+            </tr>
+            <tr>
+                <td><span class="drop-pct">-20%</span></td>
+                <td class="proj-price">US$ 51.770,74</td>
+                <td class="health-score health-good">1.15</td>
+            </tr>
+            <tr>
+                <td><span class="drop-pct">-25%</span></td>
+                <td class="proj-price">US$ 48.535,07</td>
+                <td class="health-score"><span class="health-warning">1.08</span></td>
+            </tr>
+            <tr>
+                <td><span class="drop-pct">-30%</span></td>
+                <td class="proj-price">US$ 45.299,39</td>
+                <td class="health-score"><span class="health-warning">1.01</span></td>
+            </tr>
+        </tbody>
+    </table>
 
-        <!-- Colateral BTCB (Unificado e corrigido) -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">🏦 Colateral BTCB</div>
-                <span>DEPOSITADO</span>
-            </div>
-            <div class="card-main-value" id="collateral-crypto">0.010919 BTCB</div>
-            <div class="card-footer-data">
-                <span id="collateral-fiat">USD 706,42</span>
-                <span id="ltv-value">LTV: 55%</span>
-            </div>
-        </div>
-
-        <!-- Dívida Total -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">💼 Dívida total</div>
-                <span>EMPRÉSTIMO</span>
-            </div>
-            <div class="card-main-value" id="total-debt">US$ 393,13</div>
-            <div class="card-footer-data">
-                <span>colateral ponderado</span>
-                <span id="weighted-collateral">US$ 564,28</span>
-            </div>
-        </div>
-
-        <!-- Limites de Segurança -->
-        <div class="card">
-            <div class="card-header" style="margin-bottom: 2px;">
+    <!-- Footer Monitoring Block -->
+    <div class="footer-monitor">
+        <div class="wallet-info">
+            <span class="status-dot"></span>
+            <span>Monitorando</span>
