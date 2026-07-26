@@ -17,7 +17,7 @@
         .balance-label { color: #9ca3af; }
         .balance-value { color: #ffffff; font-weight: 600; }
         
-        /* Gráfico Circular de Saúde Venus */
+        /* Grafico Circular */
         .venus-health-gauge-box { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0; padding: 20px 0; border-top: 1px dashed #1e3a27; }
         .gauge-wrapper { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; }
         .gauge-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
@@ -25,7 +25,6 @@
         .gauge-track { fill: none; stroke: #1e3a27; stroke-width: 2; stroke-dasharray: 4,4; }
         .gauge-progress { fill: none; stroke: #a3e635; stroke-width: 4; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 0.8s ease; }
         
-        /* Ponto Orbitando */
         .orbit-dot { position: absolute; width: 12px; height: 12px; background-color: #a3e635; border-radius: 50%; box-shadow: 0 0 12px #a3e635; top: 94px; left: 94px; transform-origin: center; animation: orbit 4s linear infinite; }
         
         .gauge-center-text { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -71,7 +70,6 @@
                 <span class="balance-value" id="wallet-balance">Conectando...</span>
             </div>
 
-            <!-- CÍRCULO DINÂMICO CONECTADO -->
             <div class="venus-health-gauge-box">
                 <div class="gauge-wrapper">
                     <svg class="gauge-svg" viewBox="0 0 200 200">
@@ -144,7 +142,6 @@
     </div>
 
     <script>
-        // Altere para a sua carteira real com empréstimos ativos para ver a saúde se mover
         const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
 
         function atualizarPrecoPainel(btcPrice) {
@@ -159,5 +156,7 @@
             document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
         }
 
-        // 1. ATUALIZAÇÃO CONSTANTE DO BITCOIN (Via API Oficial de Preços da Binance)
+        // Sistema CORS-Proxy para quebrar a segurança restritiva do navegador móvel
         function fetchOnlinePrice() {
+            const targetUrl = "https://binance.com";
+            fetch(`https://allorigins.win{encodeURIComponent(targetUrl)}`)
