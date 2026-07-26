@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Liquidação Cripto - Corrigido</title>
+    <title>Painel de Liquidação Cripto - Funcional</title>
     <style>
         :root {
             --bg-color: #0d0e10;
@@ -293,11 +293,9 @@
 <script>
     const PRECO_LIQUIDACAO = 45001.36; 
 
-    const formatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-    });
+    function formatarMoeda(valor) {
+        return "US$ " + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 
     async function fetchBitcoinPrice() {
         try {
@@ -312,16 +310,17 @@
     }
 
     function updateDashboard(currentBtcPrice) {
-        document.getElementById('liq-price').innerText = formatter.format(PRECO_LIQUIDACAO).replace('$', 'US$ ');
+        document.getElementById('liq-price').innerText = formatarMoeda(PRECO_LIQUIDACAO);
 
         const distancePct = ((currentBtcPrice - PRECO_LIQUIDACAO) / currentBtcPrice) * 100;
         document.getElementById('distance-pct').innerText = distancePct.toFixed(1) + "% de queda";
 
+        // Números recolocados explicitamente de forma segura
         const drops =;
         const tbody = document.getElementById('simulation-rows');
         tbody.innerHTML = ''; 
 
-        drops.forEach(drop => {
+        drops.forEach(function(drop) {
             const projectedPrice = currentBtcPrice * (1 - (drop / 100));
             const healthFactor = projectedPrice / PRECO_LIQUIDACAO;
             const isWarning = healthFactor <= 1.10;
@@ -329,18 +328,15 @@
 
             const row = '<tr>' +
                 '<td><span class="drop-pct">-' + drop + '%</span></td>' +
-                '<td class="proj-price">' + formatter.format(projectedPrice).replace('$', 'US$ ') + '</td>' +
+                '<td class="proj-price">' + formatarMoeda(projectedPrice) + '</td>' +
                 '<td class="health-score ' + healthClass + '">' + healthFactor.toFixed(2) + '</td>' +
                 '</tr>';
             tbody.innerHTML += row;
         });
 
         const now = new Date();
-        const timeString = now.toTimeString().split(' ')[0];
+        const timeString = now.toLocaleTimeString('pt-BR');
         document.getElementById('sync-text').innerText = 'Última sincronização: ' + timeString + ' · Dados atualizados automaticamente';
     }
 
     fetchBitcoinPrice();
-    setInterval(fetchBitcoinPrice, 30000);
-</script>
-
