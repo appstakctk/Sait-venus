@@ -144,75 +144,6 @@
             color: var(--text-secondary);
         }
 
-        /* Decision Points Timeline */
-        .timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 15px;
-            position: relative;
-            padding-left: 15px;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 4px;
-            top: 10px;
-            bottom: 10px;
-            width: 2px;
-            background: #233026;
-        }
-
-        .timeline-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-        }
-
-        .timeline-dot {
-            position: absolute;
-            left: -15px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: grey;
-            top: 14px;
-        }
-
-        .dot-green { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-        .dot-yellow { background: var(--accent-yellow); }
-        .dot-red { background: var(--accent-red); }
-
-        .timeline-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .timeline-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-
-        .timeline-value {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 2px;
-        }
-
-        .badge {
-            font-size: 10px;
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
-        .badge-green { background: #1a2e1d; color: var(--accent-green); }
-        .badge-yellow { background: #2e2a14; color: var(--accent-yellow); }
-        .badge-red { background: #331414; color: var(--accent-red); }
-
         .alert-box {
             background-color: #162218;
             border-radius: 12px;
@@ -222,11 +153,6 @@
             align-items: center;
             gap: 10px;
             font-size: 13px;
-        }
-
-        .alert-box span {
-            color: var(--accent-green);
-            font-weight: bold;
         }
 
         /* Stress Test Table */
@@ -283,56 +209,99 @@
     <div class="dashboard">
 
         <!-- Fator de Saúde com Círculo Animado -->
-        <div class="gauge-container">
+        <div class="card gauge-container">
             <div class="gauge-wrapper">
                 <div class="gauge-circle-animated"></div>
                 <div class="gauge-content">
                     <span class="gauge-label">Fator de Saúde</span>
                     <span class="gauge-value" id="health-factor">1.44</span>
-                    <span class="gauge-status" id="health-status">POSIÇÃO SAUDÁVEL</span>
+                    <span class="gauge-status">SAUDÁVEL</span>
                 </div>
             </div>
+            
+            <div class="alert-box">
+                💡 Posição protegida contra liquidações imediatas.
+            </div>
         </div>
 
-        <!-- BTC / USDT -->
+        <!-- Visão Geral de Saldos -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">🪙 BTC / USDT</div>
-                <span>PERMANENTE: BTC/USDT</span>
+                <div class="card-title">Garantiu (Garantia)</div>
+                <span>Disponível: 65%</span>
             </div>
-            <div class="card-main-value" id="btc-price">US$ 64.777,54</div>
+            <div class="card-main-value">$10,450.00</div>
             <div class="card-footer-data">
-                <span id="market-status" style="color: var(--accent-green);">● Mercado conectado</span>
-                <span>🔄</span>
+                <span>Limite de Crédito: $7,315.00</span>
             </div>
         </div>
 
-        <!-- Colateral BTCB (Unificado e corrigido) -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">🏦 Colateral BTCB</div>
-                <span>DEPOSITADO</span>
+                <div class="card-title">Emprestou (Dívida)</div>
+                <span>Uso do Limite: 69.4%</span>
             </div>
-            <div class="card-main-value" id="collateral-crypto">0.010919 BTCB</div>
+            <div class="card-main-value">$5,080.00</div>
             <div class="card-footer-data">
-                <span id="collateral-fiat">USD 706,42</span>
-                <span id="ltv-value">LTV: 55%</span>
+                <span>Barreira de Liq.: $8,360.00</span>
             </div>
         </div>
 
-        <!-- Dívida Total -->
+        <!-- Tabela de Teste de Estresse Adaptável -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">💼 Dívida total</div>
-                <span>EMPRÉSTIMO</span>
+                <div class="card-title">Simulação de Risco (Preço Mercado BTC)</div>
             </div>
-            <div class="card-main-value" id="total-debt">US$ 393,13</div>
-            <div class="card-footer-data">
-                <span>colateral ponderado</span>
-                <span id="weighted-collateral">US$ 564,28</span>
-            </div>
+            <table class="stress-table">
+                <thead>
+                    <tr>
+                        <th>Queda</th>
+                        <th>Preço Estipulado</th>
+                        <th class="col-right">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="drop-val">Atual</td>
+                        <td class="price-val" id="btc-price-current">Carregando...</td>
+                        <td class="col-right"><span class="health-badge h-green">1.44</span></td>
+                    </tr>
+                    <tr>
+                        <td class="drop-val">-15%</td>
+                        <td class="price-val" id="btc-price-drop15">Calculando...</td>
+                        <td class="col-right"><span class="health-badge h-yellow">1.22</span></td>
+                    </tr>
+                    <tr>
+                        <td class="drop-val">-30%</td>
+                        <td class="price-val" id="btc-price-drop30">Calculando...</td>
+                        <td class="col-right"><span class="health-badge h-red">1.01</span></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <!-- Limites de Segurança -->
-        <div class="card">
-            <div class="card-header" style="margin-bottom: 2px;">
+        <div class="footer-text">
+            Dados atualizados via API pública. Mantenha seu Fator de Saúde acima de 1.1 para evitar penalidades de margem do Venus Protocol.
+        </div>
+
+    </div>
+
+    <!-- Script de Conexão à API de Preço Real -->
+    <script>
+        async function obterPrecoBTC() {
+            try {
+                // Conexão direta com a API pública da Binance para obter o par BTCUSDT
+                const endpoint = 'https://binance.com';
+                const resposta = await fetch(endpoint);
+                const resultado = await resposta.json();
+                
+                if (resultado && resultado.price) {
+                    const precoAtual = parseFloat(resultado.price);
+                    
+                    // Cálculos das faixas de depreciação do teste de estresse
+                    const queda15 = precoAtual * 0.85;
+                    const queda30 = precoAtual * 0.70;
+
+                    // Formatação monetária (Padrão US$ em formato inglês internacional)
+                    const formatarMoeda = (valor) => {
+                        return valor.toLocaleString('en-US', {
