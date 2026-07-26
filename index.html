@@ -59,7 +59,6 @@
             align-items: center;
         }
 
-        /* Círculo que gira e muda de cor */
         .gauge-circle-animated {
             position: absolute;
             width: 150px;
@@ -71,7 +70,6 @@
             transition: border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
-        /* Conteúdo interno fixo (não gira) */
         .gauge-content {
             position: relative;
             display: flex;
@@ -102,33 +100,17 @@
             letter-spacing: 0.5px;
         }
 
-        /* Animações CSS */
         @keyframes rotateGauge {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
 
         @keyframes colorPulse {
-            0% {
-                border-color: #9eff00;
-                box-shadow: 0 0 15px rgba(158, 255, 0, 0.4);
-            }
-            25% {
-                border-color: #00f3ff;
-                box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-            }
-            50% {
-                border-color: #b600ff;
-                box-shadow: 0 0 15px rgba(182, 0, 255, 0.4);
-            }
-            75% {
-                border-color: #ffd000;
-                box-shadow: 0 0 15px rgba(255, 208, 0, 0.4);
-            }
-            100% {
-                border-color: #9eff00;
-                box-shadow: 0 0 15px rgba(158, 255, 0, 0.4);
-            }
+            0% { border-color: #9eff00; box-shadow: 0 0 15px rgba(158, 255, 0, 0.4); }
+            25% { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+            50% { border-color: #b600ff; box-shadow: 0 0 15px rgba(182, 0, 255, 0.4); }
+            75% { border-color: #ffd000; box-shadow: 0 0 15px rgba(255, 208, 0, 0.4); }
+            100% { border-color: #9eff00; box-shadow: 0 0 15px rgba(158, 255, 0, 0.4); }
         }
 
         /* Row Cards */
@@ -291,7 +273,8 @@
             text-align: center;
             font-size: 11px;
             color: var(--text-secondary);
-            margin-top: 10px;
+            margin-top: 15px;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -332,7 +315,7 @@
             </div>
             <div class="card-main-value" id="collateral-crypto">0.010919 BTCB</div>
             <div class="card-footer-data">
-                <span id="collateral-fiat">USD 707,31</span>
+                <span id="collateral-fiat">USD 706,42</span>
                 <span id="ltv-value">LTV: 55%</span>
             </div>
         </div>
@@ -345,3 +328,11 @@
             </div>
             <div class="card-main-value" id="total-debt">US$ 393,13</div>
             <div class="card-footer-data">
+                <span>colateral ponderado</span>
+                <span id="weighted-collateral">US$ 564,28</span>
+            </div>
+        </div>
+
+        <!-- Limites de Segurança -->
+        <div class="card">
+            <div class="card-header" style="margin-bottom: 2px;">
