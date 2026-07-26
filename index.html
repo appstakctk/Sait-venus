@@ -61,7 +61,7 @@
         .healthy { background-color: rgba(2, 192, 118, 0.2); color: #02c076; }
         .danger { background-color: rgba(207, 62, 66, 0.2); color: #cf3e42; }
     </style>
-    <!-- CORREÇÃO 1: Importação correta do Ethers.js v5 via CDN estável -->
+    <!-- Importação correta do Ethers.js v5 via CDN oficial -->
     <script src="https://cloudflare.com" type="text/javascript"></script>
 </head>
 <body>
@@ -103,12 +103,12 @@
 </div>
 
 <script>
-// DICA DE SEGURANÇA: Sua carteira está exposta aqui publicamente no GitHub.
+// Alerta: Sua carteira está pública neste código
 const minhaCarteira = "0x49F8739791713858A6718564f035f8c35905829C";
 
 window.onload = function() {
     sincronizarRede();
-    setInterval(sincronizarRede, 25000); 
+    setInterval(sincronizarRede, 25000); // Executa a cada 25 segundos
 };
 
 async function sincronizarRede() {
@@ -116,34 +116,35 @@ async function sincronizarRede() {
     errorBanner.style.display = 'none';
 
     try {
-        // CORREÇÃO 2: Endpoint público oficial de API de preços da Binance
-        const btcRes = await fetch("https://binance.com");
-        if(!btcRes.ok) throw new Error("Erro na API da Binance");
+        // 1. Busca o preço atualizado via KuCoin (Livre de erros CORS em navegadores)
+        const btcRes = await fetch("https://kucoin.com");
+        if(!btcRes.ok) throw new Error("Erro ao buscar preço do BTC");
         const btcData = await btcRes.json();
-        const precoBTC = parseFloat(btcData.price);
+        const precoBTC = parseFloat(btcData.data.price);
 
-        // CORREÇÃO 3: Endpoint público e completo do RPC da BSC da Ankr
+        // 2. Conexão RPC estável com a rede BNB Chain via Ankr
         const provider = new ethers.providers.JsonRpcProvider("https://ankr.com");
         
+        // ABI do Comptroller da Venus Protocol
         const vComptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint, uint, uint)"];
         const vComptrollerAddress = "0xfD36E2c2a6789Db23113685031d7F16329158384";
         const contratoVenus = new ethers.Contract(vComptrollerAddress, vComptrollerAbi, provider);
 
-        // Chamada on-chain para checar se a conta tem liquidez suficiente
+        // Chamada de contrato inteligente
         const liquidezDaRede = await contratoVenus.getAccountLiquidity(minhaCarteira);
         
-        // Valores validados dinâmicos baseados no colateral informado
+        // Dados de posição configurados manualmente
         const quantidadeBTCB = 0.008673; 
         const dividaFixa = 318.96; 
         const fatorColateral = 0.80; 
 
-        // Processamento matemático protegido
+        // Cálculos matemáticos estruturados
         const colateralBruto = quantidadeBTCB * precoBTC;
         const colateralPonderado = colateralBruto * fatorColateral;
         const fatorSaudeReal = colateralPonderado / dividaFixa;
         const pontoDeQuebra = dividaFixa / (quantidadeBTCB * fatorColateral);
 
-        // Renderiza os valores processados com segurança dentro dos seus blocos
+        // Atualização da interface web
         document.getElementById('btcPrice').innerText = `U$ ${precoBTC.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         document.getElementById('totalSupply').innerText = `U$ ${colateralBruto.toFixed(2)}`;
         document.getElementById('totalBorrow').innerText = `U$ ${dividaFixa.toFixed(2)}`;
@@ -161,7 +162,7 @@ async function sincronizarRede() {
 
     } catch (err) {
         console.error("Erro na sincronização:", err);
-        errorBanner.style.display = 'block';
+        errorBanner.style.display = 'block'; // Mostra o banner de erro na tela
     }
 }
 </script>
