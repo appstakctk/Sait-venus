@@ -16,8 +16,27 @@
         .wallet-balance-container { display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px; }
         .balance-label { color: #9ca3af; }
         .balance-value { color: #ffffff; font-weight: 600; }
-        .venus-health-container { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #1e3a27; font-size: 14px; }
-        .health-score-value { font-weight: 700; color: #10b981; }
+        
+        /* Nova Seção do Medidor Circular Estilizado da Venus */
+        .venus-health-gauge-box { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0; padding: 20px 0; border-top: 1px dashed #1e3a27; }
+        .gauge-wrapper { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; }
+        
+        /* Círculos de fundo do medidor */
+        .gauge-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .gauge-bg { fill: none; stroke: #1a231d; stroke-width: 4; }
+        .gauge-track { fill: none; stroke: #1e3a27; stroke-width: 2; stroke-dasharray: 4,4; }
+        
+        /* Círculo Principal de Saúde e Animação do Ponto */
+        .gauge-progress { fill: none; stroke: #10b981; stroke-width: 4; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 1s ease-in-out; }
+        
+        .orbit-dot { position: absolute; width: 12px; height: 12px; background-color: #a3e635; border-radius: 50%; box-shadow: 0 0 12px #a3e635; top: 94px; left: 94px; transform-origin: center; animation: orbit 4s linear infinite; }
+        
+        /* Centro do Medidor Circular */
+        .gauge-center-text { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .gauge-title { color: #8892b0; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 2px; }
+        .gauge-number { color: #a3e635; font-size: 44px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+        .gauge-badge { background-color: rgba(163, 230, 53, 0.1); color: #a3e635; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
         .header-title-container { display: flex; flex-direction: column; gap: 6px; }
         .subtitle { color: #626770; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
@@ -37,6 +56,12 @@
         .price-block { text-align: right; display: flex; flex-direction: column; gap: 4px; }
         .price-value { color: #ffffff; font-size: 16px; font-weight: 600; }
         .percentage-value { color: #626770; font-size: 12px; }
+
+        /* Animação do Ponto Orbitando ao Redor do Círculo */
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translate(90px) rotate(0deg); }
+            100% { transform: rotate(360deg) translate(90px) rotate(-360deg); }
+        }
     </style>
 </head>
 <body>
@@ -51,9 +76,22 @@
                 <span class="balance-value" id="wallet-balance">Buscando...</span>
             </div>
 
-            <div class="venus-health-container">
-                <span class="balance-label">Saúde no Venus Protocol:</span>
-                <span class="health-score-value" id="venus-health">Analisando...</span>
+            <!-- NOVO MEDIDOR CIRCULAR EM MOVIMENTO DA CARTEIRA VENUS -->
+            <div class="venus-health-gauge-box">
+                <div class="gauge-wrapper">
+                    <svg class="gauge-svg" viewBox="0 0 200 200">
+                        <circle class="gauge-bg" cx="100" cy="100" r="90"></circle>
+                        <circle class="gauge-track" cx="100" cy="100" r="82"></circle>
+                        <circle class="gauge-progress" id="gauge-ring" cx="100" cy="100" r="90"></circle>
+                    </svg>
+                    <div class="orbit-dot" id="gauge-dot"></div>
+                    
+                    <div class="gauge-center-text">
+                        <span class="gauge-title">Fator de Saúde</span>
+                        <div class="gauge-number" id="venus-health-val">--.--</div>
+                        <div class="gauge-badge" id="venus-health-status">Analisando</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -125,53 +163,3 @@
             document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
         }
 
-        function loadBitcoinPrice() {
-            // Nova API CryptoCompare totalmente segura via HTTPS e compatível com GitHub Pages
-            fetch("https://cryptocompare.com")
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.USD) {
-                        atualizarInterfacePreco(data.USD);
-                    }
-                })
-                .catch(e => console.log("Erro de conexão BTC"));
-        }
-
-        function loadWalletAndVenusData() {
-            // Chamada RPC limpa e forçada em HTTPS da rede BSC
-            fetch("https://ankr.com", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    jsonrpc: "2.0",
-                    method: "eth_getBalance",
-                    params: [wallet, "latest"],
-                    id: 1
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.result) {
-                    const balanceInBNB = Number(BigInt(data.result)) / 1e18;
-                    document.getElementById("wallet-balance").innerText = balanceInBNB.toFixed(4) + " BNB";
-                }
-            })
-            .catch(e => document.getElementById("wallet-balance").innerText = "0.0000 BNB");
-
-            // Chamada HTTPS segura direto para a API da Venus
-            fetch("https://venus.io" + wallet)
-                .then(res => res.json())
-                .then(data => {
-                    const elHealth = document.getElementById("venus-health");
-                    if (data && data.account && data.account.health && parseFloat(data.account.health) > 0) {
-                        const healthScore = parseFloat(data.account.health);
-                        if (healthScore >= 1.5) {
-                            elHealth.innerHTML = `<span style="color: #10b981;">${healthScore.toFixed(2)} (Saudável)</span>`;
-                        } else if (healthScore > 1.0 && healthScore < 1.5) {
-                            elHealth.innerHTML = `<span style="color: #d1923f;">${healthScore.toFixed(2)} (Risco Moderado)</span>`;
-                        } else {
-                            elHealth.innerHTML = `<span style="color: #a63d3d;">${healthScore.toFixed(2)} (Risco Crítico)</span>`;
-                        }
-                    } else {
-                        elHealth.innerHTML = `<span style="color: #9ca3af;">Sem Empréstimos Ativos</span>`;
-                    }
