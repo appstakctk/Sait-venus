@@ -202,7 +202,7 @@
                 </div>
             </div>
             <div class="alert-box" id="risk-alert">
-                Sincronizando oráculos descentralizados secundários...
+                Sincronizando feed de mercado em tempo real...
             </div>
         </div>
 
@@ -232,7 +232,7 @@
             </div>
         </div>
 
-        <!-- Tabela Dinâmica com Fallback Inteligente -->
+        <!-- Tabela Dinâmica via Script Injection -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">Teste de Estresse (Liquidação do BTC)</div>
@@ -248,37 +248,36 @@
                 <tbody>
                     <tr>
                         <td>Atual Mercado</td>
-                        <td class="price-val" id="btc-current">$64,606.15</td>
-                        <td class="col-right"><span class="health-badge h-green" id="hf-badge-current">1.43</span></td>
+                        <td class="price-val" id="btc-current">Buscando...</td>
+                        <td class="col-right"><span class="health-badge h-green" id="hf-badge-current">---</span></td>
                     </tr>
                     <tr>
                         <td>Queda -15%</td>
-                        <td class="price-val" id="btc-drop15">$54,915.22</td>
-                        <td class="col-right"><span class="health-badge h-yellow" id="hf-badge-drop15">1.21</span></td>
+                        <td class="price-val" id="btc-drop15">Calculando...</td>
+                        <td class="col-right"><span class="health-badge h-yellow" id="hf-badge-drop15">---</span></td>
                     </tr>
                     <tr>
                         <td>Queda -30%</td>
-                        <td class="price-val" id="btc-drop30">$45,224.30</td>
-                        <td class="col-right"><span class="health-badge h-red" id="hf-badge-drop30">1.00</span></td>
+                        <td class="price-val" id="btc-drop30">Calculando...</td>
+                        <td class="col-right"><span class="health-badge h-red" id="hf-badge-drop30">---</span></td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="footer-text">
-            Conexão Bypass ativada. Se o app bloquear a rede externa, o painel mantém os últimos dados seguros.
+            Dados dinâmicos via Injeção de Script. Imune às travas de segurança locais de aplicativos dApp.
         </div>
 
     </div>
 
-    <!-- Script Bypass com Fallback Estático Embutido -->
+    <!-- Core de Processamento do Painel Financeiro -->
     <script>
         const carteiraBtcBalance = 0.010918; 
         const dividaFixaUsd = 393.11;
         const limiteLiquidacaoFator = 0.80; 
 
-        // Função de processamento de dados dinâmica
-        function processarPrecoBtc(precoBtcAtual) {
+        function atualizarPainelComPreco(precoBtcAtual) {
             const precoDrop15 = precoBtcAtual * 0.85;
             const precoDrop30 = precoBtcAtual * 0.70;
 
@@ -305,3 +304,5 @@
 
             renderBadge('hf-badge-current', hfAtual);
             renderBadge('hf-badge-drop15', hfDrop15);
+            renderBadge('hf-badge-drop30', hfDrop30);
+
