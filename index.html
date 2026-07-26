@@ -3,35 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Monitoramento Dinâmico</title>
+    <title>Limites Dinâmicos & Carteira BEP20 (BSC)</title>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: #0b0c0e; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; gap: 15px; }
-        
-        .card { background-color: #121316; width: 100%; max-width: 500px; border-radius: 20px; padding: 20px; border: 1px solid #1f2226; }
-        .section-title { color: #10b981; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
-        
-        /* Containers para os Widgets Oficiais Legítimos */
-        .widget-frame { width: 100%; height: 160px; border: none; border-radius: 12px; background-color: #161c18; }
-        .chart-frame { width: 100%; height: 280px; border: none; border-radius: 12px; margin-top: 5px; }
+        body { background-color: #0b0c0e; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background-color: #121316; width: 100%; max-width: 500px; border-radius: 24px; padding: 28px 24px; border: 1px solid #1f2226; }
+        .wallet-section { background-color: #161c18; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #1e3a27; }
+        .wallet-title { color: #10b981; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .network-badge { background-color: #f3ba2f; color: #000000; padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+        .wallet-address { color: #f3ba2f; font-size: 12px; word-break: break-all; font-family: monospace; background: #111317; padding: 8px; border-radius: 8px; display: block; border: 1px solid #1f2226; }
+        .wallet-balance-container { display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px; }
+        .balance-label { color: #9ca3af; }
+        .balance-value { color: #ffffff; font-weight: 600; }
+        .venus-health-container { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #1e3a27; font-size: 14px; }
+        .health-score-value { font-weight: 700; color: #10b981; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+        .header-title-container { display: flex; flex-direction: column; gap: 6px; }
+        .subtitle { color: #626770; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
+        .main-title { color: #ffffff; font-size: 20px; font-weight: 500; }
+        .price-now-badge { font-size: 12px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; }
+        .risk-list { display: flex; flex-direction: column; }
+        .risk-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #1c1e22; }
+        .risk-item:last-child { border-bottom: none; }
+        .status-block { display: flex; align-items: center; gap: 14px; }
+        .indicator-bar { width: 4px; height: 38px; border-radius: 4px; }
+        .bar-warning { background-color: #d1923f; }
+        .bar-high-risk { background-color: #bb6e34; }
+        .bar-liquidation { background-color: #a63d3d; }
+        .status-info { display: flex; flex-direction: column; gap: 4px; }
+        .status-label { color: #ffffff; font-size: 15px; font-weight: 600; }
+        .health-label { color: #626770; font-size: 12px; }
+        .price-block { text-align: right; display: flex; flex-direction: column; gap: 4px; }
+        .price-value { color: #ffffff; font-size: 16px; font-weight: 600; }
+        .percentage-value { color: #626770; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <!-- Bloco 1: Monitoramento da Conta e Saúde Venus Protocol -->
     <div class="card">
-        <div class="section-title">Painel Oficial Venus Protocol</div>
-        <!-- Incorporação segura da interface oficial de conta do ecossistema Venus -->
-        <iframe class="widget-frame" src="https://venus.io"></iframe>
+        <div class="wallet-section">
+            <span class="wallet-title">Carteira Monitorada <span class="network-badge">BEP20</span></span>
+            <span class="wallet-address">0x49F8739791713858A6718564f035f8c35905829C</span>
+            
+            <div class="wallet-balance-container">
+                <span class="balance-label">Saldo em Conta:</span>
+                <span class="balance-value" id="wallet-balance">0.0000 BNB</span>
+            </div>
+
+            <div class="venus-health-container">
+                <span class="balance-label">Saúde no Venus Protocol:</span>
+                <span class="health-score-value" id="venus-health">Sem riscos</span>
+            </div>
+        </div>
+
+        <div class="card-header">
+            <div class="header-title-container">
+                <span class="subtitle">Limites Dinâmicos</span>
+                <h1 class="main-title">Pontos de risco do BTC</h1>
+                <div class="price-now-badge" id="btc-live-price">Buscando preço...</div>
+            </div>
+        </div>
+
+        <div class="risk-list">
+            <div class="risk-item">
+                <div class="status-block">
+                    <div class="indicator-bar bar-warning"></div>
+                    <div class="status-info">
+                        <span class="status-label">Aviso</span>
+                        <span class="health-label">Saúde 1.40</span>
+                    </div>
+                </div>
+                <div class="price-block">
+                    <span class="price-value" id="price-warning">US$ --.--</span>
+                    <span class="percentage-value">-2.3% do preço atual</span>
+                </div>
+            </div>
+
+            <div class="risk-item">
+                <div class="status-block">
+                    <div class="indicator-bar bar-high-risk"></div>
+                    <div class="status-info">
+                        <span class="status-label">Risco alto</span>
+                        <span class="health-label">Saúde 1.20</span>
+                    </div>
+                </div>
+                <div class="price-block">
+                    <span class="price-value" id="price-high">US$ --.--</span>
+                    <span class="percentage-value">-16.3% do preço atual</span>
+                </div>
+            </div>
+
+            <div class="risk-item">
+                <div class="status-block">
+                    <div class="indicator-bar bar-liquidation"></div>
+                    <div class="status-info">
+                        <span class="status-label">Liquidação</span>
+                        <span class="health-label">Saúde 1.00</span>
+                    </div>
+                </div>
+                <div class="price-block">
+                    <span class="price-value" id="price-liq">US$ --.--</span>
+                    <span class="percentage-value">-30.2% do preço atual</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Bloco 2: Preço do Bitcoin ao Vivo (Ticker Dinâmico da Binance) -->
-    <div class="card">
-        <div class="section-title">Preço do BTC e Limites Dinâmicos</div>
-        <!-- Widget oficial de transmissão de mercado ao vivo da Binance para webmóvel -->
-        <iframe class="chart-frame" src="https://binance.com"></iframe>
-    </div>
+    <script>
+        const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
 
-</body>
-</html>
+        function atualizarInterfacePreco(btcPrice) {
+            document.getElementById("btc-live-price").innerText = "BTC Atual: " + btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+            const warningPrice = btcPrice * (1 - 0.023);
+            const highPrice = btcPrice * (1 - 0.163);
+            const liqPrice = btcPrice * (1 - 0.302);
+
+            document.getElementById("price-warning").innerText = warningPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            document.getElementById("price-high").innerText = highPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        }
+
+        // Usando a API oficial de tickers da Blockchain.info (Altamente compatível com navegadores de celulares)
+        function loadBitcoinPrice() {
+            fetch("https://blockchain.info")
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.USD) {
+                        atualizarInterfacePreco(data.USD.last);
+                    }
+                })
+                .catch(e => console.log("Erro de rede ao processar preço."));
+        }
+
+        function loadWalletAndVenusData() {
+            // Busca o saldo utilizando a chamada pública RPC da rede BSC sem cabeçalhos restritivos
+            fetch("https://ankr.com", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    method: "eth_getBalance",
+                    params: [wallet, "latest"],
+                    id: 1
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.result) {
+                    const hexBalance = data.result;
+                    const balanceInWei = BigInt(hexBalance);
+                    const balanceInBNB = Number(balanceInWei) / 1e18;
+                    document.getElementById("wallet-balance").innerText = balanceInBNB.toFixed(4) + " BNB";
+                }
+            })
+            .catch(e => document.getElementById("wallet-balance").innerText = "0.0000 BNB");
+
+            // Coleta a saúde dinamicamente direto da API pública de indexação
+            fetch("https://venus.io" + wallet)
+                .then(res => res.json())
+                .then(data => {
+                    const elHealth = document.getElementById("venus-health");
+                    if (data && data.account && data.account.health && parseFloat(data.account.health) > 0) {
+                        const healthScore = parseFloat(data.account.health);
+                        if (healthScore >= 1.5) {
+                            elHealth.innerHTML = `<span style="color: #10b981;">${healthScore.toFixed(2)} (Saudável)</span>`;
+                        } else if (healthScore > 1.0 && healthScore < 1.5) {
+                            elHealth.innerHTML = `<span style="color: #d1923f;">${healthScore.toFixed(2)} (Risco Moderado)</span>`;
+                        } else {
+                            elHealth.innerHTML = `<span style="color: #a63d3d;">${healthScore.toFixed(2)} (Risco Crítico)</span>`;
+                        }
