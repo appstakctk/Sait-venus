@@ -191,22 +191,22 @@
 
     <div class="dashboard">
 
-        <!-- Fator de Saúde Inteligente Central -->
+        <!-- Fator de Saúde Central -->
         <div class="card gauge-container">
             <div class="gauge-wrapper">
                 <div class="gauge-circle-animated" id="gauge-circle"></div>
                 <div class="gauge-content">
                     <span class="gauge-label">Fator de Saúde</span>
                     <span class="gauge-value" id="health-factor">1.43</span>
-                    <span class="gauge-status" id="health-status">SINCRONIZANDO</span>
+                    <span class="gauge-status" id="health-status">CONECTANDO</span>
                 </div>
             </div>
             <div class="alert-box" id="risk-alert">
-                Sincronizando dados dinâmicos com a blockchain...
+                Buscando preços ao vivo na BNB Chain...
             </div>
         </div>
 
-        <!-- Colateral Vinculado -->
+        <!-- Garantia em Tempo Real -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">Garantia Fornecida (BTCB)</div>
@@ -219,7 +219,7 @@
             </div>
         </div>
 
-        <!-- Dívida Consolidada -->
+        <!-- Bloco de Dívida Fixo -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">Total Emprestado</div>
@@ -232,7 +232,7 @@
             </div>
         </div>
 
-        <!-- Teste de Estresse Dinâmico de Mercado -->
+        <!-- Simulador Totalmente Dinâmico -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">Teste de Estresse (Liquidação do BTC)</div>
@@ -248,7 +248,7 @@
                 <tbody>
                     <tr>
                         <td>Atual Mercado</td>
-                        <td class="price-val" id="btc-current">Buscando...</td>
+                        <td class="price-val" id="btc-current">Carregando...</td>
                         <td class="col-right"><span class="health-badge h-green" id="hf-badge-current">---</span></td>
                     </tr>
                     <tr>
@@ -266,36 +266,43 @@
         </div>
 
         <div class="footer-text">
-            Conexão oráculo descentralizada e dinâmica. Valores recalculados com base no preço spot global do BTC.
+            Sincronizado via RPC Node descentralizado. Preços imunes a bloqueios de navegadores.
         </div>
 
     </div>
 
     <script>
-        // Parâmetros fixos capturados da sua conta real na Venus Protocol
         const carteiraBtcBalance = 0.010918; 
         const dividaFixaUsd = 393.11;
-        const limiteLiquidacaoFator = 0.80; // Fator de liquidação estipulado para o ativo BTCB (80%)
+        const limiteLiquidacaoFator = 0.80; 
 
-        async function puxarValoresDinamicos() {
+        async function puxarDadosBlockchain() {
             try {
-                // Requisição direta via Keyless Endpoint do CoinGecko (bypass nativo para Web3 apps)
-                const url = 'https://coingecko.com';
-                const resposta = await fetch(url);
+                // Requisição RPC direto para os nós públicos da BNB Chain para buscar o preço do oráculo Chainlink do BTC
+                const payload = {
+                    jsonrpc: "2.0",
+                    method: "eth_call",
+                    params: [{
+                        to: "0x0567f2323251f0aab15c8dfb1967e4e8a7d42aee", // Contrato Oráculo Binance/Chainlink BNB Chain
+                        data: "0xfeaf968c" // Hash da função latestAnswer()
+                    }, "latest"],
+                    id: 1
+                };
+
+                const resposta = await fetch('https://binance.org', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
                 const dados = await resposta.json();
                 
-                if(dados && dados.bitcoin && dados.bitcoin.usd) {
-                    const precoBtcAtual = dados.bitcoin.usd;
+                if(dados && dados.result) {
+                    // O Oráculo retorna o preço com 8 decimais na rede, convertemos para número decimal legível
+                    const precoBtcAtual = Number(BigInt(dados.result)) / 1e8;
                     
-                    // 1. Cálculos de Desvalorização
                     const precoDrop15 = precoBtcAtual * 0.85;
                     const precoDrop30 = precoBtcAtual * 0.70;
 
                     const formatarUSD = (val) => val.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
 
-                    document.getElementById('btc-current').innerText = formatarUSD(precoBtcAtual);
-                    document.getElementById('btc-drop15').innerText = formatarUSD(precoDrop15);
-                    document.getElementById('btc-drop30').innerText = formatarUSD(precoDrop30);
-
-                    // 2. Recálculo Dinâmico do Valor Total em Garantia (Supply)
-                    const novoSupplyUsd = carteiraBtcBalance * precoBtcAtual;
