@@ -20,7 +20,7 @@
         .header-title-container { display: flex; flex-direction: column; gap: 6px; }
         .subtitle { color: #626770; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
         .main-title { color: #ffffff; font-size: 20px; font-weight: 500; }
-        .price-now-badge { font-size: 12px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; }
+        .price-now-badge { font-size: 12px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; transition: all 0.2s ease; }
         .risk-list { display: flex; flex-direction: column; }
         .risk-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #1c1e22; }
         .risk-item:last-child { border-bottom: none; }
@@ -45,7 +45,7 @@
             <span class="wallet-address">0x49F8739791713858A6718564f035f8c35905829C</span>
             <div class="wallet-balance-container">
                 <span class="balance-label">Saldo em Conta:</span>
-                <span class="balance-value" id="wallet-balance">0.0000 BNB</span>
+                <span class="balance-value" id="wallet-balance">Carregando...</span>
             </div>
         </div>
 
@@ -53,7 +53,7 @@
             <div class="header-title-container">
                 <span class="subtitle">Limites Dinâmicos</span>
                 <h1 class="main-title">Pontos de risco do BTC</h1>
-                <div class="price-now-badge" id="btc-live-price">BTC Atual: $64,400.00</div>
+                <div class="price-now-badge" id="btc-live-price">Conectando à Binance...</div>
             </div>
         </div>
 
@@ -67,7 +67,7 @@
                     </div>
                 </div>
                 <div class="price-block">
-                    <span class="price-value" id="price-warning">$62,918.80</span>
+                    <span class="price-value" id="price-warning">US$ --.--</span>
                     <span class="percentage-value">-2.3% do preço atual</span>
                 </div>
             </div>
@@ -81,7 +81,7 @@
                     </div>
                 </div>
                 <div class="price-block">
-                    <span class="price-value" id="price-high">$53,902.80</span>
+                    <span class="price-value" id="price-high">US$ --.--</span>
                     <span class="percentage-value">-16.3% do preço atual</span>
                 </div>
             </div>
@@ -95,7 +95,7 @@
                     </div>
                 </div>
                 <div class="price-block">
-                    <span class="price-value" id="price-liq">$44,951.20</span>
+                    <span class="price-value" id="price-liq">US$ --.--</span>
                     <span class="percentage-value">-30.2% do preço atual</span>
                 </div>
             </div>
@@ -103,20 +103,48 @@
     </div>
 
     <script>
-        // Script simplificado rodando diretamente após o carregamento da janela
-        window.onload = function() {
-            const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
+        const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
+        let ultimoPreco = 0;
 
-            fetch("https://coindesk.com")
-                .then(res => res.json())
-                .then(data => {
-                    const price = data.bpi.USD.rate_float;
-                    document.getElementById("btc-live-price").innerText = "BTC Atual: " + price.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-                    document.getElementById("price-warning").innerText = (price * 0.977).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-                    document.getElementById("price-high").innerText = (price * 0.837).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-                    document.getElementById("price-liq").innerText = (price * 0.698).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-                }).catch(e => console.log("Erro API Preço"));
+        function atualizarInterfacePreco(btcPrice) {
+            // Se o preço mudou, pisca suavemente a cor para indicar atualização ao vivo
+            const badge = document.getElementById("btc-live-price");
+            badge.innerText = "BTC Atual: " + btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
+            // Atualiza os pontos de risco baseados no valor exato recebido
+            const warningPrice = btcPrice * (1 - 0.023);
+            const highPrice = btcPrice * (1 - 0.163);
+            const liqPrice = btcPrice * (1 - 0.302);
+
+            document.getElementById("price-warning").innerText = warningPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            document.getElementById("price-high").innerText = highPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        }
+
+        // 1. CONEXÃO WEBSOCKET COM A BINANCE (Preço atualizando a cada segundo direto da Stream oficial)
+        function conectarStreamBinance() {
+            // Usando canal público miniTicker de stream da Binance para dados rápidos de ticker de 1s
+            const ws = new WebSocket("wss://://binance.com");
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const precoRealTime = parseFloat(data.c); // 'c' representa o preço de fechamento atualizado
+                
+                if (precoRealTime !== ultimoPreco) {
+                    ultimoPreco = precoRealTime;
+                    atualizarInterfacePreco(precoRealTime);
+                }
+            };
+
+            // Caso mude de rede ou caia, reconecta automaticamente em 5 segundos
+            ws.onclose = () => {
+                document.getElementById("btc-live-price").innerText = "Reconectando...";
+                setTimeout(conectarStreamBinance, 5000);
+            };
+        }
+
+        // 2. CONSULTA DE SALDO (Puxa da BscScan a cada 10 segundos automaticamente)
+        function loadWalletBalance() {
             fetch("https://bscscan.com" + wallet + "&tag=latest")
                 .then(res => res.json())
                 .then(data => {
@@ -124,7 +152,17 @@
                         const bnb = parseFloat(data.result) / 1000000000000000000;
                         document.getElementById("wallet-balance").innerText = bnb.toFixed(4) + " BNB";
                     }
-                }).catch(e => console.log("Erro API Saldo"));
+                }).catch(e => {
+                    document.getElementById("wallet-balance").innerText = "0.0000 BNB";
+                });
+        }
+
+        // Inicializa as funções assim que a tela estiver pronta
+        window.onload = function() {
+            conectarStreamBinance();
+            loadWalletBalance();
+            // Atualiza o saldo a cada 10 segundos
+            setInterval(loadWalletBalance, 10000);
         };
     </script>
 </body>
