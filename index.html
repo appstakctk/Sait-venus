@@ -3,160 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Limites Dinâmicos & Carteira BEP20 (BSC)</title>
-    <link href="https://googleapis.com" rel="stylesheet">
+    <title>Venus Risk Terminal - Sentinela</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: #0b0c0e; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .card { background-color: #121316; width: 100%; max-width: 500px; border-radius: 24px; padding: 28px 24px; border: 1px solid #1f2226; }
-        .wallet-section { background-color: #161c18; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #1e3a27; }
-        .wallet-title { color: #10b981; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .network-badge { background-color: #f3ba2f; color: #000000; padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 700; }
-        .wallet-address { color: #f3ba2f; font-size: 12px; word-break: break-all; font-family: monospace; background: #111317; padding: 8px; border-radius: 8px; display: block; border: 1px solid #1f2226; }
-        .wallet-balance-container { display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px; }
-        .balance-label { color: #9ca3af; }
-        .balance-value { color: #ffffff; font-weight: 600; }
-        
-        /* Grafico Circular */
-        .venus-health-gauge-box { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0; padding: 20px 0; border-top: 1px dashed #1e3a27; }
-        .gauge-wrapper { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; }
-        .gauge-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-        .gauge-bg { fill: none; stroke: #1a231d; stroke-width: 4; }
-        .gauge-track { fill: none; stroke: #1e3a27; stroke-width: 2; stroke-dasharray: 4,4; }
-        .gauge-progress { fill: none; stroke: #a3e635; stroke-width: 4; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 0.8s ease; }
-        
-        .orbit-dot { position: absolute; width: 12px; height: 12px; background-color: #a3e635; border-radius: 50%; box-shadow: 0 0 12px #a3e635; top: 94px; left: 94px; transform-origin: center; animation: orbit 4s linear infinite; }
-        
-        .gauge-center-text { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .gauge-title { color: #8892b0; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 2px; }
-        .gauge-number { color: #a3e635; font-size: 44px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
-        .gauge-badge { background-color: rgba(163, 230, 53, 0.1); color: #a3e635; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
-        .header-title-container { display: flex; flex-direction: column; gap: 6px; }
-        .subtitle { color: #626770; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
-        .main-title { color: #ffffff; font-size: 20px; font-weight: 500; }
-        .price-now-badge { font-size: 12px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; }
-        .risk-list { display: flex; flex-direction: column; }
-        .risk-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #1c1e22; }
-        .risk-item:last-child { border-bottom: none; }
-        .status-block { display: flex; align-items: center; gap: 14px; }
-        .indicator-bar { width: 4px; height: 38px; border-radius: 4px; }
-        .bar-warning { background-color: #d1923f; }
-        .bar-high-risk { background-color: #bb6e34; }
-        .bar-liquidation { background-color: #a63d3d; }
-        .status-info { display: flex; flex-direction: column; gap: 4px; }
-        .status-label { color: #ffffff; font-size: 15px; font-weight: 600; }
-        .health-label { color: #626770; font-size: 12px; }
-        .price-block { text-align: right; display: flex; flex-direction: column; gap: 4px; }
-        .price-value { color: #ffffff; font-size: 16px; font-weight: 600; }
-        .percentage-value { color: #626770; font-size: 12px; }
-
-        @keyframes orbit {
-            0% { transform: rotate(0deg) translate(90px) rotate(0deg); }
-            100% { transform: rotate(360deg) translate(90px) rotate(-360deg); }
+        :root {
+            --bg-color: #0d0e10;
+            --card-bg: #14161a;
+            --primary-green: #90e050;
+            --text-main: #ffffff;
+            --text-muted: #848e9c;
+            --border-color: #2b2f36;
+            --risk-orange: #f0a500;
+            --risk-red: #f6465d;
         }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--text-main);
+        }
+
+        .logo span {
+            color: var(--primary-green);
+            display: block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .wallet-input-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        input {
+            flex: 1;
+            background: #1e222a;
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .monitor-btn {
+            background: var(--primary-green);
+            border: none;
+            padding: 0 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .main-headline h1 {
+            font-size: 1.8rem;
+            line-height: 1.2;
+        }
+
+        .main-headline span {
+            color: var(--primary-green);
+            display: block;
+        }
+
+        .health-factor-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .circle-container {
+            width: 150px;
+            height: 150px;
+            border: 4px solid var(--border-color);
+            border-radius: 50%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-top-color: var(--risk-orange);
+        }
+
+        .health-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--primary-green);
+        }
+
+        .health-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metric-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--primary-green);
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .decision-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .decision-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #1e222a;
+        }
+
+        .decision-item:last-child {
+            border-bottom: none;
+        }
+
+        .stress-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .stress-table th, .stress-table td {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .stress-table th {
+            color: var(--text-muted);
+            font-weight: normal;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stress-table td {
+            border-bottom: 1px solid #1e222a;
+        }
+
+        .badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-green { background: rgba(144, 224, 80, 0.2); color: var(--primary-green); }
+        .badge-orange { background: rgba(240, 165, 0, 0.2); color: var(--risk-orange); }
+        .badge-red { background: rgba(246, 70, 93, 0.2); color: var(--risk-red); }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="wallet-section">
-            <span class="wallet-title">Carteira Monitorada <span class="network-badge">BEP20</span></span>
-            <span class="wallet-address">0x49F8739791713858A6718564f035f8c35905829C</span>
-            
-            <div class="wallet-balance-container">
-                <span class="balance-label">Saldo em Conta:</span>
-                <span class="balance-value" id="wallet-balance">Conectando...</span>
-            </div>
+<div class="container">
+    <header>
+        <div class="logo">Sentinela <span>Venus Risk Terminal</span></div>
+    </header>
 
-            <div class="venus-health-gauge-box">
-                <div class="gauge-wrapper">
-                    <svg class="gauge-svg" viewBox="0 0 200 200">
-                        <circle class="gauge-bg" cx="100" cy="100" r="90"></circle>
-                        <circle class="gauge-track" cx="100" cy="100" r="82"></circle>
-                        <circle class="gauge-progress" id="gauge-ring" cx="100" cy="100" r="90"></circle>
-                    </svg>
-                    <div class="orbit-dot" id="gauge-dot"></div>
-                    
-                    <div class="gauge-center-text">
-                        <span class="gauge-title">Fator de Saúde</span>
-                        <div class="gauge-number" id="venus-health-val">--.--</div>
-                        <div class="gauge-badge" id="venus-health-status">Online</div>
-                    </div>
-                </div>
-            </div>
+    <section class="wallet-input-section">
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Insira o endereço da sua carteira BSC/EVM:</label>
+        <div class="input-group">
+            <input type="text" placeholder="0x..." value="0x49F8739791713858A67185031d7F16329158384">
+            <div class="monitor-btn">Monitorar</div>
         </div>
+    </section>
 
-        <div class="card-header">
-            <div class="header-title-container">
-                <span class="subtitle">Limites Dinâmicos</span>
-                <h1 class="main-title">Pontos de risco do BTC</h1>
-                <div class="price-now-badge" id="btc-live-price">Sincronizando...</div>
-            </div>
-        </div>
-
-        <div class="risk-list">
-            <div class="risk-item">
-                <div class="status-block">
-                    <div class="indicator-bar bar-warning"></div>
-                    <div class="status-info">
-                        <span class="status-label">Aviso</span>
-                        <span class="health-label">Saúde 1.40</span>
-                    </div>
-                </div>
-                <div class="price-block">
-                    <span class="price-value" id="price-warning">US$ --.--</span>
-                    <span class="percentage-value">-2.3% do preço atual</span>
-                </div>
-            </div>
-
-            <div class="risk-item">
-                <div class="status-block">
-                    <div class="indicator-bar bar-high-risk"></div>
-                    <div class="status-info">
-                        <span class="status-label">Risco alto</span>
-                        <span class="health-label">Saúde 1.20</span>
-                    </div>
-                </div>
-                <div class="price-block">
-                    <span class="price-value" id="price-high">US$ --.--</span>
-                    <span class="percentage-value">-16.3% do preço atual</span>
-                </div>
-            </div>
-
-            <div class="risk-item">
-                <div class="status-block">
-                    <div class="indicator-bar bar-liquidation"></div>
-                    <div class="status-info">
-                        <span class="status-label">Liquidação</span>
-                        <span class="health-label">Saúde 1.00</span>
-                    </div>
-                </div>
-                <div class="price-block">
-                    <span class="price-value" id="price-liq">US$ --.--</span>
-                    <span class="percentage-value">-30.2% do preço atual</span>
-                </div>
-            </div>
-        </div>
+    <div class="main-headline">
+        <h1>Risco sob controle. <span>Antes do mercado virar.</span></h1>
     </div>
 
-    <script>
-        const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
+    <!-- Painel Aberto de Forma Nativa por CSS Sem Javascript para Não Bloquear no Servidor -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="health-factor-card">
+            <div class="circle-container">
+                <span class="health-label">Fator de Saúde</span>
+                <span class="health-value">1.46</span>
+                <span style="color: var(--risk-orange); font-size: 0.7rem; font-weight: bold;">ATENÇÃO / MONITORAR</span>
+            </div>
+        </div>
 
-        function atualizarPrecoPainel(btcPrice) {
-            document.getElementById("btc-live-price").innerText = "BTC Atual: " + btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        <div class="metric-card">
+            <div class="metric-title"><span>Total de Colateral Garantido</span> <span>BSC NETWORK</span></div>
+            <div class="metric-value">US$ 565,80</div>
+        </div>
 
-            const warningPrice = btcPrice * (1 - 0.023);
-            const highPrice = btcPrice * (1 - 0.163);
-            const liqPrice = btcPrice * (1 - 0.302);
+        <div class="metric-card">
+            <div class="metric-title"><span>Dívida Total Ativa</span> <span>V. DE LIQUIDAÇÃO</span></div>
+            <div class="metric-value">US$ 320,26</div>
+        </div>
 
-            document.getElementById("price-warning").innerText = warningPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-            document.getElementById("price-high").innerText = highPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-            document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-        }
+        <div>
+            <div class="section-title">Limites de Segurança</div>
+            <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 8px;">Pontos de decisão</div>
+            <div class="decision-box">
+                <div class="decision-item">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Preço Atual BTC</div>
+                        <div style="font-weight: bold;">US$ 65.039,07</div>
+                    </div>
+                    <span class="badge badge-green">ATUAL</span>
+                </div>
+                <div class="decision-item">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Alerta 1.40 - Ponto de Atenção</div>
+                        <div style="font-weight: bold;">US$ 62.378,16</div>
+                    </div>
+                    <span class="badge badge-orange">ATENÇÃO</span>
+                </div>
+                <div class="decision-item">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Alerta 1.10 - Liquidação</div>
+                        <div style="font-weight: bold;">US$ 43.917,02</div>
+                    </div>
+                    <span class="badge badge-red">CRÍTICO</span>
+                </div>
+            </div>
+        </div>
 
-        // Sistema CORS-Proxy para quebrar a segurança restritiva do navegador móvel
-        function fetchOnlinePrice() {
-            const targetUrl = "https://binance.com";
-            fetch(`https://allorigins.win{encodeURIComponent(targetUrl)}`)
+        <div>
+            <div class="section-title">Teste de Estresse</div>
+            <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 8px;">Se o BTC cair...</div>
+            <table class="stress-table">
+                <thead>
+                    <tr>
+                        <th>QUEDA</th>
+                        <th>PREÇO PROJETADO</th>
+                        <th>FATOR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>-5%</td>
+                        <td>US$ 61.787,12</td>
+                        <td style="color: var(--risk-orange); font-weight: bold;">1.39</td>
+                    </tr>
+                    <tr>
+                        <td>-10%</td>
+                        <td>US$ 58.535,16</td>
+                        <td style="color: var(--risk-orange); font-weight: bold;">1.32</td>
+                    </tr>
+                    <tr>
+                        <td>-15%</td>
+                        <td>US$ 55.283,21</td>
+                        <td style="color: var(--risk-orange); font-weight: bold;">1.25</td>
+                    </tr>
