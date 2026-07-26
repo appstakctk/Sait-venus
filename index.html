@@ -48,7 +48,7 @@
             
             <div class="wallet-balance-container">
                 <span class="balance-label">Saldo em Conta:</span>
-                <span class="balance-value" id="wallet-balance">Buscando saldo...</span>
+                <span class="balance-value" id="wallet-balance">Buscando...</span>
             </div>
 
             <div class="venus-health-container">
@@ -126,19 +126,19 @@
         }
 
         function loadBitcoinPrice() {
-            // Chamada direta para o endpoint open-source livre de bloqueios CORS do Mempool
-            fetch("https://mempool.space")
+            // Nova API CryptoCompare totalmente segura via HTTPS e compatível com GitHub Pages
+            fetch("https://cryptocompare.com")
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.USD) {
                         atualizarInterfacePreco(data.USD);
                     }
                 })
-                .catch(e => console.log("Erro de conexão ao buscar BTC"));
+                .catch(e => console.log("Erro de conexão BTC"));
         }
 
         function loadWalletAndVenusData() {
-            // Chamada POST limpa usando a infraestrutura do Ankr RPC de forma direta
+            // Chamada RPC limpa e forçada em HTTPS da rede BSC
             fetch("https://ankr.com", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -152,15 +152,13 @@
             .then(res => res.json())
             .then(data => {
                 if (data && data.result) {
-                    const hexBalance = data.result;
-                    const balanceInWei = BigInt(hexBalance);
-                    const balanceInBNB = Number(balanceInWei) / 1e18;
+                    const balanceInBNB = Number(BigInt(data.result)) / 1e18;
                     document.getElementById("wallet-balance").innerText = balanceInBNB.toFixed(4) + " BNB";
                 }
             })
             .catch(e => document.getElementById("wallet-balance").innerText = "0.0000 BNB");
 
-            // Atualização dinâmica do Fator de Saúde diretamente do indexador da Venus
+            // Chamada HTTPS segura direto para a API da Venus
             fetch("https://venus.io" + wallet)
                 .then(res => res.json())
                 .then(data => {
@@ -175,3 +173,5 @@
                             elHealth.innerHTML = `<span style="color: #a63d3d;">${healthScore.toFixed(2)} (Risco Crítico)</span>`;
                         }
                     } else {
+                        elHealth.innerHTML = `<span style="color: #9ca3af;">Sem Empréstimos Ativos</span>`;
+                    }
