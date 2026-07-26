@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Liquidação Cripto - Produção</title>
+    <title>Painel de Liquidação - Venus Protocol Real-Time</title>
     <style>
         :root {
             --bg-color: #0d0e10;
@@ -81,8 +81,14 @@
         .liquidation-value {
             font-size: 32px;
             font-weight: 700;
-            margin-bottom: 24px;
+            margin-bottom: 4px;
             letter-spacing: -0.5px;
+        }
+
+        .market-value {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
         }
 
         .distance-box {
@@ -233,16 +239,19 @@
             color: #43474e;
         }
     </style>
+    <!-- Carregamento seguro da biblioteca Ethers.js -->
+    <script src="https://cloudflare.com" type="text/javascript"></script>
 </head>
 <body>
 
 <div class="container">
     <div>
         <div class="liquidation-header">
-            <div class="liquidation-title">Saúde 1,00 · Liquidação</div>
+            <div class="liquidation-title" id="health-header">Saúde Real: -- · Liquidação</div>
             <div class="badge-critical">CRÍTICO</div>
         </div>
         <div class="liquidation-value" id="liq-price">US$ 45.001,36</div>
+        <div class="market-value" id="btc-market-price">Preço de Mercado BTC: Carregando...</div>
     </div>
 
     <div class="distance-box">
@@ -253,7 +262,7 @@
         </div>
         <div>
             <div class="distance-label">Distância até a liquidação</div>
-            <div class="distance-percentage" id="distance-pct">30.5% de queda</div>
+            <div class="distance-percentage" id="distance-pct">--% de queda</div>
         </div>
     </div>
 
@@ -278,47 +287,42 @@
             </tr>
         </thead>
         <tbody id="simulation-rows">
-            <!-- Linhas estáticas iniciais de segurança para evitar tela travada -->
-            <tr><td><span class="drop-pct">-5%</span></td><td class="proj-price">US$ 61.477,75</td><td class="health-score health-good">1.37</td></tr>
-            <tr><td><span class="drop-pct">-10%</span></td><td class="proj-price">US$ 58.242,08</td><td class="health-score health-good">1.29</td></tr>
-            <tr><td><span class="drop-pct">-15%</span></td><td class="proj-price">US$ 55.006,41</td><td class="health-score health-good">1.22</td></tr>
-            <tr><td><span class="drop-pct">-20%</span></td><td class="proj-price">US$ 51.770,74</td><td class="health-score health-good">1.15</td></tr>
-            <tr><td><span class="drop-pct">-25%</span></td><td class="proj-price">US$ 48.535,07</td><td class="health-score health-warning">1.08</td></tr>
-            <tr><td><span class="drop-pct">-30%</span></td><td class="proj-price">US$ 45.299,39</td><td class="health-score health-warning">1.01</td></tr>
         </tbody>
     </table>
 
     <div class="footer-monitor">
         <div class="status-container">
             <span class="status-dot"></span>
-            <span>Monitorando Online</span>
+            <span id="wallet-label">Monitorando Venus: 0x49F87...5829C</span>
         </div>
-        <div class="sync-time" id="sync-text">Última sincronização: 14:05:31 · Dados atualizados automaticamente</div>
+        <div class="sync-time" id="sync-text">Última sincronização: --:--:-- · Dados via BNB Chain RPC</div>
     </div>
 </div>
 
 <script>
-    const PRECO_LIQUIDACAO = 45001.36; 
-    const PRECO_BTC_PADRAO = 64713.42; // Fallback caso a API caia
+    // Endereço do seu portfólio fornecido na imagem
+    const WALLET_ADDRESS = "0x49F8739791713858A6718564f035f8c35905829C";
+    
+    // Contratos Oficiais da Venus Protocol na BNB Chain (BSC)
+    const VENUS_COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384"; // Core Pool Comptroller
+    const VENUS_BTC_ORACLE = "0x2647c68b3e82d770aa6521cf3e63914a4bf74fbf"; // Exemplo de Oracle Resiliente Venus para BTCB
+
+    // RPC Node público e otimizado para a BNB Chain
+    const BSC_RPC_URL = "https://binance.org";
 
     function formatarMoeda(valor) {
         return "US$ " + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    async function fetchBitcoinPrice() {
+    async function carregarDadosVenusDeFi() {
         try {
-            // Utilizando uma URL alternativa estável compatível com GitHub Pages
-            const response = await fetch('https://coindesk.com');
-            const data = await response.json();
-            const btcPrice = data.bpi.USD.rate_float;
-            updateDashboard(btcPrice);
-        } catch (error) {
-            console.warn("Erro de conexão/CORS. Usando dados locais atualizados de segurança.");
-            updateDashboard(PRECO_BTC_PADRAO);
-        }
-    }
+            // Inicializa conexão criptográfica com a rede BSC
+            const provider = new ethers.providers.JsonRpcProvider(BSC_RPC_URL);
 
-    function updateDashboard(currentBtcPrice) {
-        document.getElementById('liq-price').innerText = formatarMoeda(PRECO_LIQUIDACAO);
-
-        const distancePct = ((currentBtcPrice - PRECO_LIQUIDACAO) / currentBtcPrice) * 100;
+            // 1. Coleta o Fator de Saúde real e a Liquidez total da conta no Comptroller da Venus
+            // Assinatura da função original: getAccountLiquidity(address) -> (uint, uint, uint)
+            const comptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint error, uint liquidity, uint shortfall)"];
+            const comptrollerContract = new ethers.Contract(VENUS_COMPTROLLER_ADDRESS, comptrollerAbi, provider);
+            const accountLiquidity = await comptrollerContract.getAccountLiquidity(WALLET_ADDRESS);
+            
+            // Tratamento matemático DeFi clássico: conversão de colateral vs empréstimos abertos
