@@ -140,6 +140,8 @@
             text-align: center;
             border: 1px solid #332d18;
             color: #ffe680;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .stress-table {
@@ -188,7 +190,7 @@
 
     <div class="dashboard">
 
-        <!-- Fator de Saúde Inteligente -->
+        <!-- Fator de Saúde Central -->
         <div class="card gauge-container">
             <div class="gauge-wrapper">
                 <div class="gauge-circle-animated" id="gauge-circle"></div>
@@ -203,11 +205,11 @@
             </div>
         </div>
 
-        <!-- Colateral Total (BTCB Fornecido) -->
+        <!-- Colateral (Garantia) -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">Garantia Fornecida (BTCB)</div>
-                <span id="btcb-balance-crypto">0.010918 BTCB</span>
+                <span>0.010918 BTCB</span>
             </div>
             <div class="card-main-value" id="total-supply-usd">$705.37</div>
             <div class="card-footer-data">
@@ -216,20 +218,20 @@
             </div>
         </div>
 
-        <!-- Dívida Ativa -->
+        <!-- Dívida (Corrigido: Duplicidade removida) -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">Total Emprestado</div>
                 <span>Barreira de Liq: $564.28</span>
             </div>
-            <div class="card-main-value" id="total-borrow-usd">$393.11</div>
+            <div class="card-main-value">$393.11</div>
             <div class="card-footer-data">
                 <span>Net APY: -2.1%</span>
                 <span>Carteira: 0x49F8...829C</span>
             </div>
         </div>
 
-        <!-- Simulação Dinâmica de Risco Baseada nos Dados Printados -->
+        <!-- Tabela Teste de Estresse -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">Teste de Estresse (Liquidação do BTC)</div>
@@ -237,53 +239,51 @@
             <table class="stress-table">
                 <thead>
                     <tr>
-                        <th>Cenário</th>
-                        <th>Preço BTC</th>
-                        <th class="col-right">Fator Novo</th>
+                        <th>CENÁRIO</th>
+                        <th>PREÇO BTC</th>
+                        <th class="col-right">FATOR NOVO</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Atual Mercado</td>
                         <td class="price-val" id="btc-current">Carregando...</td>
-                        <td class="col-right"><span class="health-badge" id="hf-badge-current">1.43</span></td>
+                        <td class="col-right"><span class="health-badge h-green" id="hf-badge-current">1.43</span></td>
                     </tr>
                     <tr>
                         <td>Queda -15%</td>
                         <td class="price-val" id="btc-drop15">Calculando...</td>
-                        <td class="col-right"><span class="health-badge" id="hf-badge-drop15">1.21</span></td>
+                        <td class="col-right"><span class="health-badge h-yellow" id="hf-badge-drop15">1.21</span></td>
                     </tr>
                     <tr>
                         <td>Queda -30%</td>
                         <td class="price-val" id="btc-drop30">Calculando...</td>
-                        <td class="col-right"><span class="health-badge" id="hf-badge-drop30">1.00</span></td>
+                        <td class="col-right"><span class="health-badge h-red" id="hf-badge-drop30">1.00</span></td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="footer-text">
-            Dados calibrados via API Binance Spot. Risco de liquidação iminente caso o Fator atinja 1.00.
+            Dados calibrados via API pública sem bloqueio CORS. Risco de liquidação iminente caso o Fator atinja 1.00.
         </div>
 
     </div>
 
     <script>
-        // Dados estáticos reais extraídos do seu print da plataforma Venus
         const carteiraBtcBalance = 0.010918; 
         const dividaFixaUsd = 393.11;
-        const limiteLiquidacaoFator = 0.80; // Taxa de colateralização média da Venus para BTCB (Liquidation Threshold ~80%)
+        const limiteLiquidacaoFator = 0.80; 
 
         async function recalcularPainelDeFi() {
             try {
-                // Obtendo a cotação em tempo real diretamente do livro de ofertas da Binance
-                const res = await fetch('https://binance.com');
+                // Utilizando a API CoinGecko com suporte nativo a requisições de navegadores (Sem bloqueio CORS)
+                const res = await fetch('https://coingecko.com');
                 const dados = await res.json();
                 
-                if(dados && dados.price) {
-                    const precoBtcAtual = parseFloat(dados.price);
+                if(dados && dados.bitcoin && dados.bitcoin.usd) {
+                    const precoBtcAtual = dados.bitcoin.usd;
                     
-                    // 1. Atualiza os preços calculados na tabela de estresse
                     const precoDrop15 = precoBtcAtual * 0.85;
                     const precoDrop30 = precoBtcAtual * 0.70;
 
@@ -291,5 +291,9 @@
                     document.getElementById('btc-drop15').innerText = precoDrop15.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
                     document.getElementById('btc-drop30').innerText = precoDrop30.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
 
-                    // 2. Calcula dinamicamente o novo fornecimento em USD baseado no mercado
                     const novoSupplyUsd = carteiraBtcBalance * precoBtcAtual;
+                    document.getElementById('total-supply-usd').innerText = novoSupplyUsd.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+
+                    const calcularHF = (supply) => (supply * limiteLiquidacaoFator) / dividaFixaUsd;
+
+                    const hfAtual = calcularHF(novoSupplyUsd);
