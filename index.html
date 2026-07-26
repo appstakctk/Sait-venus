@@ -16,16 +16,13 @@
         .wallet-balance-container { display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px; }
         .balance-label { color: #9ca3af; }
         .balance-value { color: #ffffff; font-weight: 600; }
-        
-        /* Novo Campo Especial para Saúde Venus */
         .venus-health-container { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #1e3a27; font-size: 14px; }
         .health-score-value { font-weight: 700; color: #10b981; }
-
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
         .header-title-container { display: flex; flex-direction: column; gap: 6px; }
         .subtitle { color: #626770; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
         .main-title { color: #ffffff; font-size: 20px; font-weight: 500; }
-        .price-now-badge { font-size: 12px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; transition: all 0.2s ease; }
+        .price-now-badge { font-size: 12px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; }
         .risk-list { display: flex; flex-direction: column; }
         .risk-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #1c1e22; }
         .risk-item:last-child { border-bottom: none; }
@@ -54,10 +51,9 @@
                 <span class="balance-value" id="wallet-balance">Carregando...</span>
             </div>
 
-            <!-- EXIBIÇÃO DA SAÚDE DA CARTEIRA VENUS PROTOCOL -->
             <div class="venus-health-container">
                 <span class="balance-label">Saúde no Venus Protocol:</span>
-                <span class="health-score-value" id="venus-health">1.00 (Seguro)</span>
+                <span class="health-score-value" id="venus-health">Consultando rede...</span>
             </div>
         </div>
 
@@ -65,7 +61,7 @@
             <div class="header-title-container">
                 <span class="subtitle">Limites Dinâmicos</span>
                 <h1 class="main-title">Pontos de risco do BTC</h1>
-                <div class="price-now-badge" id="btc-live-price">Conectando à Binance...</div>
+                <div class="price-now-badge" id="btc-live-price">Carregando preço...</div>
             </div>
         </div>
 
@@ -115,12 +111,11 @@
     </div>
 
     <script>
+        // Mude este endereço para a carteira que tem os empréstimos ativos na Venus
         const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
-        let ultimoPreco = 0;
 
         function atualizarInterfacePreco(btcPrice) {
-            const badge = document.getElementById("btc-live-price");
-            badge.innerText = "BTC Atual: " + btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            document.getElementById("btc-live-price").innerText = "BTC Atual: " + btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
             const warningPrice = btcPrice * (1 - 0.023);
             const highPrice = btcPrice * (1 - 0.163);
@@ -131,25 +126,18 @@
             document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
         }
 
-        function conectarStreamBinance() {
-            const ws = new WebSocket("wss://://binance.com");
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                const precoRealTime = parseFloat(data.c);
-                if (precoRealTime !== ultimoPreco) {
-                    ultimoPreco = precoRealTime;
-                    atualizarInterfacePreco(precoRealTime);
-                }
-            };
-            ws.onclose = () => {
-                document.getElementById("btc-live-price").innerText = "Reconectando...";
-                setTimeout(conectarStreamBinance, 5000);
-            };
+        function loadBitcoinPrice() {
+            fetch("https://coindesk.com")
+                .then(res => res.json())
+                .then(data => {
+                    const price = data.bpi.USD.rate_float;
+                    atualizarInterfacePreco(price);
+                })
+                .catch(e => console.log("Erro API Preço"));
         }
 
-        // FUNÇÃO PARA BUSCAR DADOS DA CARTEIRA E SAÚDE DA VENUS
         function loadWalletAndVenusData() {
-            // Consulta de Saldo Nativo BNB
+            // Busca saldo real de BNB
             fetch("https://bscscan.com" + wallet + "&tag=latest")
                 .then(res => res.json())
                 .then(data => {
@@ -159,18 +147,25 @@
                     }
                 }).catch(e => document.getElementById("wallet-balance").innerText = "0.0000 BNB");
 
-            /* 
-               Consulta de Saúde da Conta via API oficial da Venus Protocol.
-               Se a carteira não possuir empréstimos ativos, o Health Factor retorna como Seguro por padrão (sem risco).
-            */
+            // Monitoramento Real do Fator de Saúde da Conta na Venus Protocol
             fetch("https://venus.io" + wallet)
                 .then(res => res.json())
                 .then(data => {
-                    if (data && data.account && data.account.health) {
+                    const elHealth = document.getElementById("venus-health");
+                    
+                    // Verifica se a carteira tem dados de saúde estruturados na API
+                    if (data && data.account && data.account.health && parseFloat(data.account.health) > 0) {
                         const healthScore = parseFloat(data.account.health);
-                        const elHealth = document.getElementById("venus-health");
                         
+                        // Atualiza as cores dinamicamente dependendo se o fator sobe ou desce
                         if (healthScore >= 1.5) {
                             elHealth.innerHTML = `<span style="color: #10b981;">${healthScore.toFixed(2)} (Saudável)</span>`;
                         } else if (healthScore > 1.0 && healthScore < 1.5) {
                             elHealth.innerHTML = `<span style="color: #d1923f;">${healthScore.toFixed(2)} (Risco Moderado)</span>`;
+                        } else {
+                            elHealth.innerHTML = `<span style="color: #a63d3d;">${healthScore.toFixed(2)} (Risco Crítico)</span>`;
+                        }
+                    } else {
+                        // Resposta caso a carteira informada não possua empréstimos em andamento
+                        elHealth.innerHTML = `<span style="color: #9ca3af;">Sem Empréstimos</span>`;
+                    }
