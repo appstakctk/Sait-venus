@@ -292,10 +292,10 @@
         </div>
     </div>
 
-    <!-- SCRIPT TÉCNICO DE INTEGRAÇÃO E SEGURANÇA -->
+    <!-- NOVO SCRIPT INJETADO DIRETAMENTE -->
     <script>
         const walletAddress = "0x49F8739791713858A6718564f035f8c35905829C";
-        const PRECO_ESTIMADO_BTC = 64400.00; // Valor de fallback baseado no mercado atual caso as APIs externas falhem
+        const PRECO_ESTIMADO_BTC = 64400.00; 
 
         function calcularLimites(btcPrice) {
             document.getElementById("btc-live-price").innerText = `BTC Atual: ${btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`;
@@ -306,3 +306,6 @@
 
             document.getElementById("price-warning").innerText = warningPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
             document.getElementById("price-high").innerText = highPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            document.getElementById("price-liq").innerText = liqPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        }
+
