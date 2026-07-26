@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Risco Avançada - Venus</title>
+    <!-- Inclusão da Biblioteca Ethers.js para Integração Web3 com a BNB Chain -->
+    <script src="https://cloudflare.com"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -45,10 +47,16 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             transition: 0.2s;
         }
         .btn-api:hover { background-color: #30363d; }
+        .btn-web3 {
+            background-color: #238636;
+            color: white;
+            border: 1px solid #2ea44f;
+        }
+        .btn-web3:hover { background-color: #2ea44f; }
         .result-box {
             margin-top: 20px;
             padding: 15px;
@@ -62,7 +70,6 @@
         .danger { background-color: #f85149; color: white; }
         .info { font-size: 14px; color: #8b949e; margin-top: 10px; text-align: center; font-weight: bold; }
         
-        /* Estilos do Modo Pânico */
         .panic-box {
             margin-top: 15px;
             padding: 15px;
@@ -74,7 +81,6 @@
         .panic-title { color: #f85149; font-weight: bold; margin-bottom: 5px; font-size: 15px; }
         .panic-value { font-size: 16px; font-weight: bold; color: #f85149; line-height: 1.5; }
 
-        /* Estilos da Tabela */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -85,6 +91,7 @@
             padding: 8px;
             text-align: center;
             border-bottom: 1px solid #30363d;
+            white-space: nowrap;
         }
         th { background-color: #21262d; color: #58a6ff; }
         tr:hover { background-color: #21262d; }
@@ -98,6 +105,7 @@
 <div class="container">
     <h2>Simulador Dinâmico Venus v2</h2>
     
+    <button class="btn-api btn-web3" id="btnConnect" onclick="conectarCarteira()">🦊 Conectar Carteira Web3 (Venus)</button>
     <button class="btn-api" onclick="atualizarPrecoAPI()">🔄 Sincronizar Preço Real do BTC</button>
 
     <div class="input-group">
@@ -123,7 +131,6 @@
         Preço limite de liquidação: US$ --
     </div>
 
-    <!-- MÓDULO ADICIONADO: Painel de Proteção contra Margens de Risco -->
     <div id="panicPanel" class="panic-box" style="display: none;">
         <div class="panic-title">🚨 MÓDULO DE CONTINGÊNCIA Ativo</div>
         <div id="panicInstruction" class="info" style="color: #c9d1d9; margin-top: 0;">Para atingir a Meta de Saúde Segura (1.50):</div>
@@ -143,15 +150,83 @@
             </tr>
         </thead>
         <tbody id="projectionTable">
-            <!-- Gerado via JavaScript -->
+            <!-- Gerado via JavaScript Dinâmico -->
         </tbody>
     </table>
 </div>
 
 <script>
-// CORRIGIDO: Endpoint público da API do CoinGecko para puxar a cotação real do Bitcoin
+// Contratos Oficiais da Venus Protocol na BNB Chain para a leitura automatizada dos saldos
+const COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384";
+const VBTC_ADDRESS = "0x882C173bC7Ff3b7786CA16dfD90933a7d420955E";
+
+// ABIs mínimas necessárias para interagir com os smart contracts do protocolo
+const comptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint, uint, uint)"];
+const vTokenAbi = [
+    "function balanceOfSnapshot(address account) view returns (uint, uint, uint, uint)",
+    "function borrowBalanceStored(address account) view returns (uint)"
+];
+
+async function conectarCarteira() {
+    const btn = document.getElementById('btnConnect');
+    if (typeof window.ethereum === 'undefined') {
+        alert('Por favor, utilize um navegador Web3 ou instale a extensão MetaMask/Trust Wallet.');
+        return;
+    }
+    
+    try {
+        btn.innerText = "⏳ Conectando...";
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const walletAddress = await signer.getAddress();
+        
+        btn.innerText = `✅ Conectado: ${walletAddress.substring(0,6)}...${walletAddress.substring(38)}`;
+        btn.className = "btn-api"; // remove cor verde de desconectado
+        
+        await buscarDadosVenus(provider, walletAddress);
+    } catch (erro) {
+        console.error(erro);
+        btn.innerText = "❌ Erro ao conectar carteira.";
+        setTimeout(() => { btn.innerText = "🦊 Conectar Carteira Web3 (Venus)"; }, 3000);
+    }
+}
+
+async function buscarDadosVenus(provider, walletAddress) {
+    try {
+        // Conexão com os contratos da rede através da carteira injetada
+        const vBtcContract = new ethers.Contract(VBTC_ADDRESS, vTokenAbi, provider);
+        const comptrollerContract = new ethers.Contract(COMPTROLLER_ADDRESS, comptrollerAbi, provider);
+
+        // 1. Busca os saldos internos de fornecimento (Snapshot)
+        const snapshot = await vBtcContract.balanceOfSnapshot(walletAddress);
+        const vTokenBalance = snapshot[1]; 
+        const exchangeRate = snapshot[3];
+        
+        // Conversão matemática estrutural de Wei para unidades legíveis do Token BTCB fornecido
+        const balanceBTCB = (vTokenBalance.mul(exchangeRate).div(ethers.constants.WeiPerEther)).toString();
+        const btcColateralFinal = parseFloat(ethers.utils.formatUnits(balanceBTCB, 18));
+
+        // 2. Busca a dívida total direta da conta do usuário em dólares (Liquidez do Comptroller)
+        const liquidez = await comptrollerContract.getAccountLiquidity(walletAddress);
+        const dividaTotalUSD = parseFloat(ethers.utils.formatUnits(liquidez[2], 18)); 
+
+        // Atualiza a árvore DOM com os dados dinâmicos extraídos diretamente da rede BNB chain
+        if(btcColateralFinal > 0) {
+            document.getElementById('btcBalance').value = btcColateralFinal.toFixed(6);
+        }
+        document.getElementById('borrow').value = dividaTotalUSD.toFixed(2);
+
+        // Dispara o motor de cálculos nativo
+        calcular();
+    } catch (erro) {
+        console.error("Falha ao sincronizar dados da carteira na Blockchain:", erro);
+        alert("Erro ao ler os dados do Venus Protocol. Verifique se está conectado na rede BNB Chain.");
+    }
+}
+
 async function atualizarPrecoAPI() {
-    const btn = document.querySelector('.btn-api');
+    const btn = document.querySelector('.btn-api:not(.btn-web3)');
     try {
         btn.innerText = "⏳ Buscando dados do mercado...";
         const resposta = await fetch('https://coingecko.com');
@@ -174,86 +249,7 @@ function calcular() {
     const balance = parseFloat(document.getElementById('btcBalance').value) || 0;
     const borrow = parseFloat(document.getElementById('borrow').value) || 0;
     
-    const fatorGarantia = 0.80; // 80% LT real do painel Venus
+    const fatorGarantia = 0.80; 
     const healthMetaSegura = 1.50; 
     
     if (borrow <= 0) {
-        document.getElementById('result').innerText = "Fator de Saúde: ∞";
-        document.getElementById('result').className = "result-box safe";
-        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
-        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
-        document.getElementById('panicPanel').style.display = "none";
-        return;
-    }
-
-    const colateralTotal = balance * price;
-    const hfAtual = (colateralTotal * fatorGarantia) / borrow;
-    const liqPrice = borrow / (balance * fatorGarantia);
-
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerText = "Fator de Saúde Atual: " + hfAtual.toFixed(2);
-    
-    if (hfAtual >= 1.5) resultDiv.className = "result-box safe";
-    else if (hfAtual >= 1.15) resultDiv.className = "result-box moderate";
-    else resultDiv.className = "result-box danger";
-
-    document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: US$ " + Math.round(liqPrice).toLocaleString('pt-BR');
-
-    // LOGICA DO MÓDULO DE PÂNICO: Dispara automaticamente caso o Fator de Saúde esteja abaixo de 1.50
-    const panicPanel = document.getElementById('panicPanel');
-    if (hfAtual < healthMetaSegura) {
-        panicPanel.style.display = "block";
-        
-        // 1. Quanto de dívida amortizar para reajustar o Fator de Saúde para 1.50
-        const dividaMaxAlvo = (colateralTotal * fatorGarantia) / healthMetaSegura;
-        const pagarUSD = borrow - dividaMaxAlvo;
-        
-        // 2. Quanto de BTC depositar para reajustar o Fator de Saúde para 1.50 mantendo a dívida igual
-        const colateralAlvoUSD = (borrow * healthMetaSegura) / fatorGarantia;
-        const depositarUSD = colateralAlvoUSD - colateralTotal;
-        const depositarBTC = price > 0 ? (depositarUSD / price) : 0;
-
-        document.getElementById('panicAction').innerHTML = 
-            `Amortizar a dívida em: <span class="text-danger">US$ ${pagarUSD.toFixed(2)}</span><br>` +
-            `OU<br>` +
-            `Depositar colateral: <span class="text-safe">${depositarBTC.toFixed(6)} BTC</span> (~US$ ${depositarUSD.toFixed(2)})`;
-    } else {
-        panicPanel.style.display = "none";
-    }
-
-    // GERAÇÃO DA TABELA DE PROJEÇÕES AUTOMÁTICAS DE QUEDA
-    const quedas = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50];
-    let tabelaHTML = "";
-
-    quedas.forEach(queda => {
-        const precoProjetado = price * (1 - queda);
-        const colateralProjetado = balance * precoProjetado;
-        const hfProjetado = (colateralProjetado * fatorGarantia) / borrow;
-
-        let classeStatus = "text-safe";
-        if (hfProjetado < 1.15) {
-            classeStatus = "text-danger";
-        } else if (hfProjetado < 1.50) {
-            classeStatus = "text-warning";
-        }
-
-        tabelaHTML += `
-            <tr>
-                <td>${queda * 100}%</td>
-                <td>US$ ${Math.round(precoProjetado).toLocaleString('pt-BR')}</td>
-                <td>US$ ${colateralProjetado.toFixed(2)}</td>
-                <td class="${classeStatus}">${hfProjetado.toFixed(2)}</td>
-            </tr>
-        `;
-    });
-
-    document.getElementById('projectionTable').innerHTML = tabelaHTML;
-}
-
-// Executa o cálculo inicial assim que carregar as janelas da página
-window.onload = function() {
-    calcular();
-};
-</script>
-</body>
-</html>
