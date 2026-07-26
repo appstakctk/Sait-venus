@@ -72,7 +72,7 @@
             text-align: center;
         }
         .panic-title { color: #f85149; font-weight: bold; margin-bottom: 5px; font-size: 15px; }
-        .panic-value { font-size: 16px; font-weight: bold; color: #f85149; }
+        .panic-value { font-size: 16px; font-weight: bold; color: #f85149; line-height: 1.5; }
 
         /* Estilos da Tabela */
         table {
@@ -149,7 +149,7 @@
 </div>
 
 <script>
-// FUNÇÃO ADICIONADA: Busca cotação ao vivo via API pública CoinGecko
+// CORRIGIDO: Endpoint público da API do CoinGecko para puxar a cotação real do Bitcoin
 async function atualizarPrecoAPI() {
     const btn = document.querySelector('.btn-api');
     try {
@@ -214,41 +214,46 @@ function calcular() {
         const depositarBTC = price > 0 ? (depositarUSD / price) : 0;
 
         document.getElementById('panicAction').innerHTML = 
-            `Pague: <strong style="color:#ff4a4a">US$ ${pagarUSD.toFixed(2)}</strong> da dívida<br>` +
-            `<span style="font-size:12px;color:#8b949e">OU adicione colateral de</span><br>` +
-            `Deposite: <strong style="color:#58a6ff">${depositarBTC.toFixed(6)} BTCB</strong> (~US$ ${depositarUSD.toFixed(2)})`;
+            `Amortizar a dívida em: <span class="text-danger">US$ ${pagarUSD.toFixed(2)}</span><br>` +
+            `OU<br>` +
+            `Depositar colateral: <span class="text-safe">${depositarBTC.toFixed(6)} BTC</span> (~US$ ${depositarUSD.toFixed(2)})`;
     } else {
         panicPanel.style.display = "none";
     }
 
-    // Gerador de Projeções de Recuo
-    const porcentagensQueda = [0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30];
-    let htmlPrevisoes = "";
+    // GERAÇÃO DA TABELA DE PROJEÇÕES AUTOMÁTICAS DE QUEDA
+    const quedas = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50];
+    let tabelaHTML = "";
 
-    porcentagensQueda.forEach(queda => {
+    quedas.forEach(queda => {
         const precoProjetado = price * (1 - queda);
         const colateralProjetado = balance * precoProjetado;
         const hfProjetado = (colateralProjetado * fatorGarantia) / borrow;
-        
-        let classeStatus = "text-safe";
-        if (hfProjetado < 1.15) classeStatus = "text-danger";
-        else if (hfProjetado < 1.30) classeStatus = "text-warning";
 
-        if (precoProjetado > liqPrice) {
-            htmlPrevisoes += `
-                <tr>
-                    <td>-${(queda * 100)}%</td>
-                    <td>US$ ${Math.round(precoProjetado).toLocaleString('pt-BR')}</td>
-                    <td>US$ ${colateralProjetado.toFixed(2)}</td>
-                    <td class="${classeStatus}">${hfProjetado.toFixed(2)}</td>
-                </tr>
-            `;
+        let classeStatus = "text-safe";
+        if (hfProjetado < 1.15) {
+            classeStatus = "text-danger";
+        } else if (hfProjetado < 1.50) {
+            classeStatus = "text-warning";
         }
+
+        tabelaHTML += `
+            <tr>
+                <td>${queda * 100}%</td>
+                <td>US$ ${Math.round(precoProjetado).toLocaleString('pt-BR')}</td>
+                <td>US$ ${colateralProjetado.toFixed(2)}</td>
+                <td class="${classeStatus}">${hfProjetado.toFixed(2)}</td>
+            </tr>
+        `;
     });
 
-    // Linha final de colapso crítico
-    htmlPrevisoes += `
-        <tr style="background-color: rgba(248, 81, 73, 0.1);">
-            <td class="text-danger">LIQ.</td>
-            <td class="text-danger">US$ ${Math.round(liqPrice).toLocaleString('pt-BR')}</td>
-            <td class="text-danger">US$ ${(balance * liqPrice).toFixed(2)}</td>
+    document.getElementById('projectionTable').innerHTML = tabelaHTML;
+}
+
+// Executa o cálculo inicial assim que carregar as janelas da página
+window.onload = function() {
+    calcular();
+};
+</script>
+</body>
+</html>
