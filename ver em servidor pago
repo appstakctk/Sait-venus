@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Saúde Financeira - Venus Protocol</title>
+    <style>
+        :root {
+            --bg-color: #0b0f0c;
+            --card-bg: #131a15;
+            --text-primary: #ffffff;
+            --text-secondary: #707a73;
+            --accent-green: #9eff00;
+            --accent-yellow: #ffd000;
+            --accent-red: #ff4d4d;
+            --border-color: #1f2a22;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .gauge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 10px;
+        }
+
+        .gauge-wrapper {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gauge-circle-animated {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 3px dashed var(--accent-yellow);
+            border-radius: 50%;
+            animation: rotateGauge 8s linear infinite;
+            box-shadow: 0 0 15px rgba(255, 208, 0, 0.2);
+            transition: all 0.5s ease;
+        }
+
+        .gauge-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .gauge-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .gauge-value {
+            font-size: 42px;
+            font-weight: bold;
+            color: var(--accent-yellow);
+            margin: 5px 0;
+            transition: color 0.5s ease;
+        }
+
+        .gauge-status {
+            font-size: 10px;
+            color: var(--accent-yellow);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        @keyframes rotateGauge {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: #d1d5d2;
+        }
+
+        .card-main-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-footer-data {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .alert-box {
+            background-color: #221f14;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 12px;
+            text-align: center;
+            border: 1px solid #332d18;
+            color: #ffe680;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.5s ease;
+        }
+
+        .stress-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .stress-table th {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: left;
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stress-table td {
+            padding: 10px 0;
+            font-size: 13px;
+            border-bottom: 1px solid #17221a;
+        }
+
+        .col-right { text-align: right; }
+        .price-val { font-weight: 600; }
+        
+        .health-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .h-green { background: #1a2e1d; color: var(--accent-green); }
+        .h-yellow { background: #2e2a14; color: var(--accent-yellow); }
+        .h-red { background: #331414; color: var(--accent-red); }
+
+        .footer-text {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+
+        <!-- Fator de Saúde Inteligente Central -->
+        <div class="card gauge-container">
+            <div class="gauge-wrapper">
+                <div class="gauge-circle-animated" id="gauge-circle"></div>
+                <div class="gauge-content">
+                    <span class="gauge-label">Fator de Saúde</span>
+                    <span class="gauge-value" id="health-factor">1.43</span>
+                    <span class="gauge-status" id="health-status">SINCRONIZANDO</span>
+                </div>
+            </div>
+            <div class="alert-box" id="risk-alert">
+                Sincronizando dados dinâmicos com a blockchain...
+            </div>
+        </div>
+
+        <!-- Colateral Vinculado -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Garantia Fornecida (BTCB)</div>
+                <span>0.010918 BTCB</span>
+            </div>
+            <div class="card-main-value" id="total-supply-usd">$705.37</div>
+            <div class="card-footer-data">
+                <span>Net Worth: $312.26</span>
+                <span>Uso de Linha: 70%</span>
+            </div>
+        </div>
+
+        <!-- Dívida Consolidada -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Total Emprestado</div>
+                <span>Barreira de Liq: $564.28</span>
+            </div>
+            <div class="card-main-value">$393.11</div>
+            <div class="card-footer-data">
+                <span>Net APY: -2.1%</span>
+                <span>Carteira: 0x49F8...829C</span>
+            </div>
+        </div>
+
+        <!-- Teste de Estresse Dinâmico de Mercado -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Teste de Estresse (Liquidação do BTC)</div>
+            </div>
+            <table class="stress-table">
+                <thead>
+                    <tr>
+                        <th>CENÁRIO</th>
+                        <th>PREÇO BTC</th>
+                        <th class="col-right">FATOR NOVO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Atual Mercado</td>
+                        <td class="price-val" id="btc-current">Buscando...</td>
+                        <td class="col-right"><span class="health-badge h-green" id="hf-badge-current">---</span></td>
+                    </tr>
+                    <tr>
+                        <td>Queda -15%</td>
+                        <td class="price-val" id="btc-drop15">Calculando...</td>
+                        <td class="col-right"><span class="health-badge h-yellow" id="hf-badge-drop15">---</span></td>
+                    </tr>
+                    <tr>
+                        <td>Queda -30%</td>
+                        <td class="price-val" id="btc-drop30">Calculando...</td>
+                        <td class="col-right"><span class="health-badge h-red" id="hf-badge-drop30">---</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer-text">
+            Conexão oráculo descentralizada e dinâmica. Valores recalculados com base no preço spot global do BTC.
+        </div>
+
+    </div>
+
+    <script>
+        // Parâmetros fixos capturados da sua conta real na Venus Protocol
+        const carteiraBtcBalance = 0.010918; 
+        const dividaFixaUsd = 393.11;
+        const limiteLiquidacaoFator = 0.80; // Fator de liquidação estipulado para o ativo BTCB (80%)
+
+        async function puxarValoresDinamicos() {
+            try {
+                // Requisição direta via Keyless Endpoint do CoinGecko (bypass nativo para Web3 apps)
+                const url = 'https://coingecko.com';
+                const resposta = await fetch(url);
+                const dados = await resposta.json();
+                
+                if(dados && dados.bitcoin && dados.bitcoin.usd) {
+                    const precoBtcAtual = dados.bitcoin.usd;
+                    
+                    // 1. Cálculos de Desvalorização
+                    const precoDrop15 = precoBtcAtual * 0.85;
+                    const precoDrop30 = precoBtcAtual * 0.70;
+
+                    const formatarUSD = (val) => val.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+
+                    document.getElementById('btc-current').innerText = formatarUSD(precoBtcAtual);
+                    document.getElementById('btc-drop15').innerText = formatarUSD(precoDrop15);
+                    document.getElementById('btc-drop30').innerText = formatarUSD(precoDrop30);
+
+                    // 2. Recálculo Dinâmico do Valor Total em Garantia (Supply)
+                    const novoSupplyUsd = carteiraBtcBalance * precoBtcAtual;
