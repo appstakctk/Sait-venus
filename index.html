@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Liquidação - Venus Protocol Real-Time</title>
+    <title>Painel de Liquidação - Venus Protocol circular</title>
     <style>
         :root {
             --bg-color: #0d0e10;
@@ -13,6 +13,7 @@
             --text-green: #9eff00;
             --text-red: #ff3b30;
             --border-color: #1e2226;
+            --health-color: var(--text-green);
         }
 
         * {
@@ -45,7 +46,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
+            margin-bottom: 20px;
         }
 
         .liquidation-title {
@@ -78,17 +79,68 @@
             letter-spacing: 0.5px;
         }
 
+        /* Central Health Indicator Ring Block */
+        .health-ring-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0 24px 0;
+        }
+
+        .health-svg {
+            transform: rotate(-90deg);
+        }
+
+        .health-circle-bg {
+            fill: none;
+            stroke: #1c1f22;
+            stroke-width: 6;
+        }
+
+        .health-circle-prog {
+            fill: none;
+            stroke: var(--health-color);
+            stroke-width: 6;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease, stroke 0.5s ease;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { filter: drop-shadow(0 0 2px var(--health-color)); }
+            100% { filter: drop-shadow(0 0 10px var(--health-color)); }
+        }
+
+        .inner-health-data {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
         .liquidation-value {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 4px;
             letter-spacing: -0.5px;
+            margin-bottom: 2px;
+        }
+
+        .health-indicator-text {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--health-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .market-value {
             font-size: 13px;
             color: var(--text-muted);
             margin-bottom: 24px;
+            text-align: center;
         }
 
         .distance-box {
@@ -246,10 +298,23 @@
 <div class="container">
     <div>
         <div class="liquidation-header">
-            <div class="liquidation-title" id="health-header">Saúde Real: 1.01 · Liquidação</div>
+            <div class="liquidation-title">Monitoramento de Margem · Venus</div>
             <div class="badge-critical">CRÍTICO</div>
         </div>
-        <div class="liquidation-value" id="liq-price">US$ 45.001,36</div>
+        
+        <!-- Bloco Circular Dinâmico -->
+        <div class="health-ring-wrapper">
+            <svg class="health-svg" width="220" height="220">
+                <circle class="health-circle-bg" cx="110" cy="110" r="100"></circle>
+                <!-- Perímetro aproximado do círculo: 2 * PI * r = 628.3 -->
+                <circle class="health-circle-prog" id="health-bar" cx="110" cy="110" r="100" stroke-dasharray="628.3" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="inner-health-data">
+                <div class="liquidation-value" id="liq-price">US$ 45.001,36</div>
+                <div class="health-indicator-text" id="health-string">Saúde: 1.01</div>
+            </div>
+        </div>
+
         <div class="market-value" id="btc-market-price">Preço de Mercado BTC: US$ 64.713,42</div>
     </div>
 
@@ -285,40 +350,3 @@
                 <th style="width: 20%;">Saúde</th>
             </tr>
         </thead>
-        <tbody id="simulation-rows">
-            <tr><td><span class="drop-pct">-5%</span></td><td class="proj-price">US$ 61.477,75</td><td class="health-score health-good">1.37</td></tr>
-            <tr><td><span class="drop-pct">-10%</span></td><td class="proj-price">US$ 58.242,08</td><td class="health-score health-good">1.29</td></tr>
-            <tr><td><span class="drop-pct">-15%</span></td><td class="proj-price">US$ 55.006,41</td><td class="health-score health-good">1.22</td></tr>
-            <tr><td><span class="drop-pct">-20%</span></td><td class="proj-price">US$ 51.770,74</td><td class="health-score health-good">1.15</td></tr>
-            <tr><td><span class="drop-pct">-25%</span></td><td class="proj-price">US$ 48.535,07</td><td class="health-score health-warning">1.08</td></tr>
-            <tr><td><span class="drop-pct">-30%</span></td><td class="proj-price">US$ 45.299,39</td><td class="health-score health-warning">1.01</td></tr>
-        </tbody>
-    </table>
-
-    <div class="footer-monitor">
-        <div class="status-container">
-            <span class="status-dot"></span>
-            <span id="wallet-label">Monitorando Venus: 0x49F87...5829C</span>
-        </div>
-        <div class="sync-time" id="sync-text">Última sincronização: 14:05:31 · Dados via BNB Chain RPC</div>
-    </div>
-</div>
-
-<script>
-    const WALLET_ADDRESS = "0x49F8739791713858A6718564f035f8c35905829C";
-    const VENUS_COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384"; 
-    const BSC_RPC_URL = "https://binance.org";
-    
-    // Valores de contingência baseados na imagem original
-    const PRECO_LIQUIDACAO_PADRAO = 45001.36;
-    const PRECO_BTC_PADRAO = 64713.42;
-
-    function formatarMoeda(valor) {
-        return "US$ " + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    async function carregarDadosVenusDeFi() {
-        try {
-            const provider = new ethers.providers.JsonRpcProvider(BSC_RPC_URL);
-
-            // Coleta a liquidez da conta direto do Smart Contract da Venus
