@@ -42,7 +42,6 @@
             box-sizing: border-box;
         }
 
-        /* Top Gauge Animado */
         .gauge-container {
             display: flex;
             flex-direction: column;
@@ -67,7 +66,6 @@
             border-radius: 50%;
             animation: rotateGauge 8s linear infinite, colorPulse 6s ease-in-out infinite;
             box-shadow: 0 0 15px rgba(158, 255, 0, 0.2);
-            transition: border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
         .gauge-content {
@@ -82,7 +80,6 @@
         .gauge-label {
             font-size: 10px;
             color: var(--text-secondary);
-            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
@@ -97,7 +94,6 @@
             font-size: 10px;
             color: var(--accent-green);
             font-weight: bold;
-            letter-spacing: 0.5px;
         }
 
         @keyframes rotateGauge {
@@ -106,14 +102,10 @@
         }
 
         @keyframes colorPulse {
-            0% { border-color: #9eff00; box-shadow: 0 0 15px rgba(158, 255, 0, 0.4); }
-            25% { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
-            50% { border-color: #b600ff; box-shadow: 0 0 15px rgba(182, 0, 255, 0.4); }
-            75% { border-color: #ffd000; box-shadow: 0 0 15px rgba(255, 208, 0, 0.4); }
-            100% { border-color: #9eff00; box-shadow: 0 0 15px rgba(158, 255, 0, 0.4); }
+            0%, 100% { border-color: #9eff00; }
+            50% { border-color: #ffd000; }
         }
 
-        /* Row Cards */
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -124,9 +116,6 @@
         }
 
         .card-title {
-            display: flex;
-            align-items: center;
-            gap: 6px;
             font-weight: 600;
             color: #d1d5d2;
         }
@@ -138,10 +127,9 @@
         }
 
         .card-footer-data {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-secondary);
+            word-break: break-all;
         }
 
         .alert-box {
@@ -149,13 +137,10 @@
             border-radius: 12px;
             padding: 12px;
             margin-top: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 13px;
+            font-size: 12px;
+            text-align: center;
         }
 
-        /* Stress Test Table */
         .stress-table {
             width: 100%;
             border-collapse: collapse;
@@ -167,7 +152,6 @@
             color: var(--text-secondary);
             text-align: left;
             padding-bottom: 10px;
-            text-transform: uppercase;
         }
 
         .stress-table td {
@@ -176,12 +160,7 @@
             border-bottom: 1px solid #17221a;
         }
 
-        .stress-table tr:last-child td {
-            border-bottom: none;
-        }
-
         .col-right { text-align: right; }
-        .drop-val { color: var(--text-secondary); }
         .price-val { font-weight: 600; }
         
         .health-badge {
@@ -200,7 +179,6 @@
             font-size: 11px;
             color: var(--text-secondary);
             margin-top: 15px;
-            line-height: 1.5;
         }
     </style>
 </head>
@@ -208,72 +186,60 @@
 
     <div class="dashboard">
 
-        <!-- Fator de Saúde com Círculo Animado -->
+        <!-- Fator de Saúde Ativo -->
         <div class="card gauge-container">
             <div class="gauge-wrapper">
                 <div class="gauge-circle-animated"></div>
                 <div class="gauge-content">
                     <span class="gauge-label">Fator de Saúde</span>
                     <span class="gauge-value" id="health-factor">1.44</span>
-                    <span class="gauge-status">SAUDÁVEL</span>
+                    <span class="gauge-status" id="health-status">MONITORANDO</span>
                 </div>
             </div>
-            
-            <div class="alert-box">
-                💡 Posição protegida contra liquidações imediatas.
+            <div class="alert-box" id="wallet-info">
+                Buscando contratos da Venus...
             </div>
         </div>
 
-        <!-- Visão Geral de Saldos -->
+        <!-- Balanço de Fornecimento em vBTC (Colateral Garantido) -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Garantiu (Garantia)</div>
-                <span>Disponível: 65%</span>
+                <div class="card-title">Garantia Fornecida (vBTC)</div>
+                <span>Rede: BNB Chain</span>
             </div>
-            <div class="card-main-value">$10,450.00</div>
+            <div class="card-main-value" id="wallet-vbtc-balance">0.0000 vBTC</div>
             <div class="card-footer-data">
-                <span>Limite de Crédito: $7,315.00</span>
+                <strong>Contrato Monitorado:</strong> <span>0x49F87397...829C</span>
             </div>
         </div>
 
+        <!-- Monitor de Cotação e Simulação BTC Spot -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Emprestou (Dívida)</div>
-                <span>Uso do Limite: 69.4%</span>
-            </div>
-            <div class="card-main-value">$5,080.00</div>
-            <div class="card-footer-data">
-                <span>Barreira de Liq.: $8,360.00</span>
-            </div>
-        </div>
-
-        <!-- Tabela de Teste de Estresse Adaptável -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">Simulação de Risco (Preço Mercado BTC)</div>
+                <div class="card-title">Cenários de Risco Alternativos (BTC/USDT)</div>
             </div>
             <table class="stress-table">
                 <thead>
                     <tr>
-                        <th>Queda</th>
-                        <th>Preço Estipulado</th>
-                        <th class="col-right">Status</th>
+                        <th>Variação</th>
+                        <th>Cotação Alvo</th>
+                        <th class="col-right">Fator Calculado</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="drop-val">Atual</td>
-                        <td class="price-val" id="btc-price-current">Carregando...</td>
+                        <td>Preço de Mercado</td>
+                        <td class="price-val" id="btc-current">Carregando...</td>
                         <td class="col-right"><span class="health-badge h-green">1.44</span></td>
                     </tr>
                     <tr>
-                        <td class="drop-val">-15%</td>
-                        <td class="price-val" id="btc-price-drop15">Calculando...</td>
+                        <td>Desvalorização -15%</td>
+                        <td class="price-val" id="btc-drop15">Calculando...</td>
                         <td class="col-right"><span class="health-badge h-yellow">1.22</span></td>
                     </tr>
                     <tr>
-                        <td class="drop-val">-30%</td>
-                        <td class="price-val" id="btc-price-drop30">Calculando...</td>
+                        <td>Desvalorização -30%</td>
+                        <td class="price-val" id="btc-drop30">Calculando...</td>
                         <td class="col-right"><span class="health-badge h-red">1.01</span></td>
                     </tr>
                 </tbody>
@@ -281,27 +247,53 @@
         </div>
 
         <div class="footer-text">
-            Dados atualizados via API pública. Mantenha seu Fator de Saúde acima de 1.1 para evitar penalidades de margem do Venus Protocol.
+            Integração síncrona via RPC Nodes oficiais e contratos descentralizados da BNB Chain.
         </div>
 
     </div>
 
-    <!-- Script de Conexão à API de Preço Real -->
     <script>
-        async function obterPrecoBTC() {
-            try {
-                // Conexão direta com a API pública da Binance para obter o par BTCUSDT
-                const endpoint = 'https://binance.com';
-                const resposta = await fetch(endpoint);
-                const resultado = await resposta.json();
-                
-                if (resultado && resultado.price) {
-                    const precoAtual = parseFloat(resultado.price);
-                    
-                    // Cálculos das faixas de depreciação do teste de estresse
-                    const queda15 = precoAtual * 0.85;
-                    const queda30 = precoAtual * 0.70;
+        // Definição das constantes estruturais do ecossistema DeFi
+        const enderecoCarteira = "0x49F8739791713858A6718564f035f8c35905829C";
+        const contratoVBTC = "0x882c173bc7ff3b7786ca16dfed3dfffb9ee7847b"; // Endereço oficial do vBTC no Venus Protocol
 
-                    // Formatação monetária (Padrão US$ em formato inglês internacional)
-                    const formatarMoeda = (valor) => {
-                        return valor.toLocaleString('en-US', {
+        // 1. Busca e tratamento da variação cambial do Bitcoin (Binance API)
+        async function carregarPrecoBTC() {
+            try {
+                const res = await fetch('https://binance.com');
+                const dados = await res.json();
+                if(dados && dados.price) {
+                    const preco = parseFloat(dados.price);
+                    
+                    document.getElementById('btc-current').innerText = preco.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+                    document.getElementById('btc-drop15').innerText = (preco * 0.85).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+                    document.getElementById('btc-drop30').innerText = (preco * 0.70).toLocaleString('en-US', {style: 'currency', currency: 'USD'});
+                }
+            } catch (e) {
+                console.error("Erro na API de preços:", e);
+                document.getElementById('btc-current').innerText = "Erro Conexão";
+            }
+        }
+
+        // 2. Chamada de leitura direta de Contrato ERC-20/BEP-20 (Função balanceOf) via RPC
+        async function carregarSaldoVBTC() {
+            try {
+                // Keccak-256 da assinatura da função "balanceOf(address)" -> 0x70a08231
+                // Encodado com o endereço da carteira preenchido com zeros à esquerda até completar 64 caracteres
+                const dataParam = "0x70a08231" + enderecoCarteira.substring(2).padStart(64, '0');
+
+                const payload = {
+                    jsonrpc: "2.0",
+                    method: "eth_call",
+                    params: [
+                        {
+                            to: contratoVBTC,
+                            data: dataParam
+                        },
+                        "latest"
+                    ],
+                    id: 1
+                };
+
+                const res = await fetch('https://binance.org', {
+                    method: 'POST',
