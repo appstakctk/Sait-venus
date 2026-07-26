@@ -3,207 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exposição On-Chain</title>
+    <title>Calculadora de Risco Avançada - Venus</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #121318; color: #ffffff; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; background: #1a1b23; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .header { margin-bottom: 24px; }
-        .header p { color: #8a8d98; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-        .header h1 { font-size: 20px; font-weight: 600; margin-top: 4px; }
-        .status-bar { background: #222430; padding: 10px; border-radius: 8px; font-size: 12px; color: #a0a5b5; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .pulse { width: 8px; height: 8px; background: #00ff66; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #00ff66; }
-        .pulse.error { background: #ff3333; box-shadow: 0 0 8px #ff3333; }
-        .asset-card { background: #222430; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-        .asset-info { display: flex; align-items: center; margin-bottom: 12px; }
-        .badge { width: 36px; height: 36px; border-radius: 50%; background: rgba(140, 198, 63, 0.15); color: #8cc63f; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; margin-right: 12px; }
-        .asset-name h2 { font-size: 15px; font-weight: 600; }
-        .asset-name p { color: #727682; font-size: 12px; }
-        .row { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
-        .label { color: #727682; }
-        .value { font-weight: 500; }
-        #health-factor { font-weight: bold; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #161b22;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        h2, h3 { text-align: center; color: #58a6ff; margin-top: 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            background-color: #0d1117;
+            color: #f0f6fc;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .btn-api {
+            width: 100%;
+            padding: 10px;
+            background-color: #21262d;
+            color: #58a6ff;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: 0.2s;
+        }
+        .btn-api:hover { background-color: #30363d; }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .safe { background-color: #1f6feb; color: white; }
+        .moderate { background-color: #d29922; color: black; }
+        .danger { background-color: #f85149; color: white; }
+        .info { font-size: 14px; color: #8b949e; margin-top: 10px; text-align: center; font-weight: bold; }
+        
+        /* Estilos do Modo Pânico */
+        .panic-box {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px dashed #f85149;
+            background-color: rgba(248, 81, 73, 0.05);
+            border-radius: 5px;
+            text-align: center;
+        }
+        .panic-title { color: #f85149; font-weight: bold; margin-bottom: 5px; font-size: 15px; }
+        .panic-value { font-size: 16px; font-weight: bold; color: #f85149; }
+
+        /* Estilos da Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #30363d;
+        }
+        th { background-color: #21262d; color: #58a6ff; }
+        tr:hover { background-color: #21262d; }
+        .text-danger { color: #f85149; font-weight: bold; }
+        .text-warning { color: #d29922; font-weight: bold; }
+        .text-safe { color: #58a6ff; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <p>Exposição On-Chain</p>
-        <h1>Ativos da posição</h1>
+    <h2>Simulador Dinâmico Venus v2</h2>
+    
+    <button class="btn-api" onclick="atualizarPrecoAPI()">🔄 Sincronizar Preço Real do BTC</button>
+
+    <div class="input-group">
+        <label>Preço do BTC no Mercado (US$):</label>
+        <input type="number" id="btcPrice" value="63951" oninput="calcular()">
     </div>
 
-    <div class="status-bar">
-        <span><span class="pulse" id="status-pulse"></span> <span id="status-text">Buscando Posição DeFi...</span></span>
-        <span id="timestamp">--:--:--</span>
+    <div class="input-group">
+        <label>Seu Saldo BTCB (Colateral):</label>
+        <input type="number" id="btcBalance" value="0.009456" step="0.000001" oninput="calcular()">
     </div>
 
-    <!-- Bloco BTC -->
-    <div class="asset-card">
-        <div class="asset-info">
-            <div class="badge">BT</div>
-            <div class="asset-name">
-                <h2>BTC</h2>
-                <p>Ativo como colateral</p>
-            </div>
-        </div>
-        <div class="row">
-            <span class="label">Fornecido</span>
-            <span class="value" id="btc-fornecido">Carregando...</span>
-        </div>
-        <div class="row">
-            <span class="label">Emprestado</span>
-            <span class="value">US$ 0,00</span>
-        </div>
-        <div class="row" style="border-top: 1px dashed rgba(255, 51, 51, 0.2);">
-            <span class="label" style="color: #ff5555;">Preço de Liquidação Real</span>
-            <span class="value" id="btc-preco-liquidacao" style="color: #ff5555; font-weight: bold;">Carregando...</span>
-        </div>
+    <div class="input-group">
+        <label>Sua Dívida Total (US$):</label>
+        <input type="number" id="borrow" value="338.92" step="0.01" oninput="calcular()">
     </div>
 
-    <!-- Bloco USDT -->
-    <div class="asset-card">
-        <div class="asset-info">
-            <div class="badge" style="color: #26a17b; background: rgba(38,161,123,0.15)">US</div>
-            <div class="asset-name">
-                <h2>USDT</h2>
-                <p>Ativo como colateral</p>
-            </div>
-        </div>
-        <div class="row">
-            <span class="label">Fornecido</span>
-            <span class="value">US$ 0,00</span>
-        </div>
-        <div class="row">
-            <span class="label">Emprestado</span>
-            <span class="value" id="usdt-emprestado">Carregando...</span>
-        </div>
+    <div id="result" class="result-box moderate">
+        Fator de Saúde Atual: --
+    </div>
+    
+    <div id="liquidationPrice" class="info">
+        Preço limite de liquidação: US$ --
     </div>
 
-    <!-- Bloco SKHYB -->
-    <div class="asset-card">
-        <div class="asset-info">
-            <div class="badge" style="color: #cccc00; background: rgba(204,204,0,0.15)">SK</div>
-            <div class="asset-name">
-                <h2>SKHYB</h2>
-                <p>Ativo como colateral</p>
-            </div>
-        </div>
-        <div class="row">
-            <span class="label">Fornecido</span>
-            <span class="value" id="skhyb-fornecido">Carregando...</span>
-        </div>
-        <div class="row">
-            <span class="label">Emprestado</span>
-            <span class="value">US$ 0,00</span>
-        </div>
-    </div>
-
-    <!-- Bloco NVDAB -->
-    <div class="asset-card">
-        <div class="asset-info">
-            <div class="badge" style="color: #7f00ff; background: rgba(127,0,255,0.15)">NV</div>
-            <div class="asset-name">
-                <h2>NVDAB</h2>
-                <p>Ativo como colateral</p>
-            </div>
-        </div>
-        <div class="row">
-            <span class="label">Fornecido</span>
-            <span class="value" id="nvdab-fornecido">Carregando...</span>
-        </div>
-        <div class="row">
-            <span class="label">Emprestado</span>
-            <span class="value">US$ 0,00</span>
-        </div>
-    </div>
-
-    <!-- Fator de Saúde Dinâmico -->
-    <div class="asset-card" id="hf-card">
-        <div class="row" style="border: none;">
-            <span class="label">Fator de Saúde (Venus Real)</span>
-            <span class="value" id="health-factor" style="color: #00ff66;">0.0000</span>
-        </div>
+    <!-- MÓDULO ADICIONADO: Painel de Proteção contra Margens de Risco -->
+    <div id="panicPanel" class="panic-box" style="display: none;">
+        <div class="panic-title">🚨 MÓDULO DE CONTINGÊNCIA Ativo</div>
+        <div id="panicInstruction" class="info" style="color: #c9d1d9; margin-top: 0;">Para atingir a Meta de Saúde Segura (1.50):</div>
+        <div id="panicAction" class="panic-value">--</div>
     </div>
 </div>
 
-<script>
-    const WALLET_ADDRESS = "0x49F8739791713858A6718564f035f8c35905829C";
-    // API pública da Blockscout v1 que possui CORS liberado para navegadores e GitHub Pages
-    const API_URL = `https://blockscout.com{WALLET_ADDRESS}`;
+<div class="container">
+    <h3>Projeções Automáticas de Queda</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Queda</th>
+                <th>Preço BTC</th>
+                <th>Seu Colateral</th>
+                <th>Fator Saúde</th>
+            </tr>
+        </thead>
+        <tbody id="projectionTable">
+            <!-- Gerado via JavaScript -->
+        </tbody>
+    </table>
+</div>
 
-    function atualizarTimestamp() {
-        const agora = new Date();
-        document.getElementById('timestamp').innerText = agora.toLocaleTimeString('pt-BR');
+<script>
+// FUNÇÃO ADICIONADA: Busca cotação ao vivo via API pública CoinGecko
+async function atualizarPrecoAPI() {
+    const btn = document.querySelector('.btn-api');
+    try {
+        btn.innerText = "⏳ Buscando dados do mercado...";
+        const resposta = await fetch('https://coingecko.com');
+        const dados = await resposta.json();
+        if(dados.bitcoin && dados.bitcoin.usd) {
+            document.getElementById('btcPrice').value = dados.bitcoin.usd;
+            btn.innerText = "✅ Sincronizado com Sucesso!";
+            calcular();
+            setTimeout(() => { btn.innerText = "🔄 Sincronizar Preço Real do BTC"; }, 3000);
+        }
+    } catch (erro) {
+        console.error("Erro ao acessar API:", erro);
+        btn.innerText = "❌ Erro de Conexão. Tente mais tarde.";
+        setTimeout(() => { btn.innerText = "🔄 Sincronizar Preço Real do BTC"; }, 4000);
+    }
+}
+
+function calcular() {
+    const price = parseFloat(document.getElementById('btcPrice').value) || 0;
+    const balance = parseFloat(document.getElementById('btcBalance').value) || 0;
+    const borrow = parseFloat(document.getElementById('borrow').value) || 0;
+    
+    const fatorGarantia = 0.80; // 80% LT real do painel Venus
+    const healthMetaSegura = 1.50; 
+    
+    if (borrow <= 0) {
+        document.getElementById('result').innerText = "Fator de Saúde: ∞";
+        document.getElementById('result').className = "result-box safe";
+        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
+        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
+        document.getElementById('panicPanel').style.display = "none";
+        return;
     }
 
-    async function processarTudoDinamico() {
-        try {
-            const response = await fetch(API_URL);
-            if (!response.ok) throw new Error("Erro de conexão");
-            const data = await response.json();
+    const colateralTotal = balance * price;
+    const hfAtual = (colateralTotal * fatorGarantia) / borrow;
+    const liqPrice = borrow / (balance * fatorGarantia);
 
-            // Valores de segurança caso a carteira não possua saldo no momento da consulta
-            let precoBtcAtual = 98500;
-            let saldoMoedasBTC = 0.00592; 
-            let totalColateralBTCUSD = 583.31;
-            let totalDividaUSDTUSD = 318.92;
-            let saldoSkhybUSD = 0.05;
-            let saldoNvdabUSD = 0.03;
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerText = "Fator de Saúde Atual: " + hfAtual.toFixed(2);
+    
+    if (hfAtual >= 1.5) resultDiv.className = "result-box safe";
+    else if (hfAtual >= 1.15) resultDiv.className = "result-box moderate";
+    else resultDiv.className = "result-box danger";
 
-            if (data && data.status === "1" && Array.isArray(data.result)) {
-                const tokens = data.result;
+    document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: US$ " + Math.round(liqPrice).toLocaleString('pt-BR');
 
-                // 1. Localização e Processamento do BTCB
-                const tokenBtc = tokens.find(t => t.symbol === "BTCB" || t.symbol === "BTC");
-                if (tokenBtc) {
-                    const preco = parseFloat(tokenBtc.usd_price || 0);
-                    if(preco > 0) precoBtcAtual = preco;
-                    
-                    const saldoBruto = BigInt(tokenBtc.balance || 0);
-                    const decimais = parseInt(tokenBtc.decimals || 18);
-                    const saldoCalculado = Number(saldoBruto) / (10 ** decimais);
-                    if (saldoCalculado > 0) {
-                        saldoMoedasBTC = saldoCalculado;
-                        totalColateralBTCUSD = saldoMoedasBTC * precoBtcAtual;
-                    }
-                }
+    // LOGICA DO MÓDULO DE PÂNICO: Dispara automaticamente caso o Fator de Saúde esteja abaixo de 1.50
+    const panicPanel = document.getElementById('panicPanel');
+    if (hfAtual < healthMetaSegura) {
+        panicPanel.style.display = "block";
+        
+        // 1. Quanto de dívida amortizar para reajustar o Fator de Saúde para 1.50
+        const dividaMaxAlvo = (colateralTotal * fatorGarantia) / healthMetaSegura;
+        const pagarUSD = borrow - dividaMaxAlvo;
+        
+        // 2. Quanto de BTC depositar para reajustar o Fator de Saúde para 1.50 mantendo a dívida igual
+        const colateralAlvoUSD = (borrow * healthMetaSegura) / fatorGarantia;
+        const depositarUSD = colateralAlvoUSD - colateralTotal;
+        const depositarBTC = price > 0 ? (depositarUSD / price) : 0;
 
-                // 2. Localização e Processamento do USDT
-                const tokenUsdt = tokens.find(t => t.symbol === "USDT");
-                if (tokenUsdt) {
-                    const saldoBruto = BigInt(tokenUsdt.balance || 0);
-                    const decimais = parseInt(tokenUsdt.decimals || 18);
-                    const saldoCalculado = Number(saldoBruto) / (10 ** decimais);
-                    if (saldoCalculado > 0) totalDividaUSDTUSD = saldoCalculado;
-                }
+        document.getElementById('panicAction').innerHTML = 
+            `Pague: <strong style="color:#ff4a4a">US$ ${pagarUSD.toFixed(2)}</strong> da dívida<br>` +
+            `<span style="font-size:12px;color:#8b949e">OU adicione colateral de</span><br>` +
+            `Deposite: <strong style="color:#58a6ff">${depositarBTC.toFixed(6)} BTCB</strong> (~US$ ${depositarUSD.toFixed(2)})`;
+    } else {
+        panicPanel.style.display = "none";
+    }
 
-                // 3. Localização e Processamento do SKHYB
-                const tokenSkhyb = tokens.find(t => t.symbol === "SKHYB");
-                if (tokenSkhyb) {
-                    const preco = parseFloat(tokenSkhyb.usd_price || 0);
-                    const saldoBruto = BigInt(tokenSkhyb.balance || 0);
-                    const decimais = parseInt(tokenSkhyb.decimals || 18);
-                    const saldoCalculado = Number(saldoBruto) / (10 ** decimais);
-                    if (saldoCalculado > 0 && preco > 0) saldoSkhybUSD = saldoCalculado * preco;
-                }
+    // Gerador de Projeções de Recuo
+    const porcentagensQueda = [0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30];
+    let htmlPrevisoes = "";
 
-                // 4. Localização e Processamento do NVDAB
-                const tokenNvdab = tokens.find(t => t.symbol === "NVDAB");
-                if (tokenNvdab) {
-                    const preco = parseFloat(tokenNvdab.usd_price || 0);
-                    const saldoBruto = BigInt(tokenNvdab.balance || 0);
-                    const decimais = parseInt(tokenNvdab.decimals || 18);
-                    const saldoCalculado = Number(saldoBruto) / (10 ** decimais);
-                    if (saldoCalculado > 0 && preco > 0) saldoNvdabUSD = saldoCalculado * preco;
-                }
-            }
+    porcentagensQueda.forEach(queda => {
+        const precoProjetado = price * (1 - queda);
+        const colateralProjetado = balance * precoProjetado;
+        const hfProjetado = (colateralProjetado * fatorGarantia) / borrow;
+        
+        let classeStatus = "text-safe";
+        if (hfProjetado < 1.15) classeStatus = "text-danger";
+        else if (hfProjetado < 1.30) classeStatus = "text-warning";
 
-            // Regras matemáticas da Venus Protocol para posições DeFi
-            const collateralFactorBTC = 0.75; 
-            const totalColateralCalculado = (totalColateralBTCUSD * collateralFactorBTC) + saldoSkhybUSD + saldoNvdabUSD;
-            const healthFactor = totalDividaUSDTUSD > 0 ? (totalColateralCalculado / totalDividaUSDTUSD) : 99.9;
-            const precoLiquidacaoBTC = totalDividaUSDTUSD / (saldoMoedasBTC * collateralFactorBTC);
+        if (precoProjetado > liqPrice) {
+            htmlPrevisoes += `
+                <tr>
+                    <td>-${(queda * 100)}%</td>
+                    <td>US$ ${Math.round(precoProjetado).toLocaleString('pt-BR')}</td>
+                    <td>US$ ${colateralProjetado.toFixed(2)}</td>
+                    <td class="${classeStatus}">${hfProjetado.toFixed(2)}</td>
+                </tr>
+            `;
+        }
+    });
 
-            // Renderização dos dados tratados na interface
-            document.getElementById("btc-fornecido").innerText = `US$ ${totalColateralBTCUSD.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    // Linha final de colapso crítico
+    htmlPrevisoes += `
+        <tr style="background-color: rgba(248, 81, 73, 0.1);">
+            <td class="text-danger">LIQ.</td>
+            <td class="text-danger">US$ ${Math.round(liqPrice).toLocaleString('pt-BR')}</td>
+            <td class="text-danger">US$ ${(balance * liqPrice).toFixed(2)}</td>
