@@ -129,8 +129,8 @@
 
 <script>
     const WALLET_ADDRESS = "0x49F8739791713858A6718564f035f8c35905829C";
-    // Endpoint do Blockscout focado na rede BNB Smart Chain (onde opera a Venus Protocol)
-    const API_URL = `https://blockscout.com{WALLET_ADDRESS}/token-balances`;
+    // API pública da Blockscout v1 que possui CORS liberado para navegadores e GitHub Pages
+    const API_URL = `https://blockscout.com{WALLET_ADDRESS}`;
 
     function atualizarTimestamp() {
         const agora = new Date();
@@ -140,68 +140,70 @@
     async function processarTudoDinamico() {
         try {
             const response = await fetch(API_URL);
-            if (!response.ok) throw new Error("Erro na API");
+            if (!response.ok) throw new Error("Erro de conexão");
             const data = await response.json();
 
-            let precoBtcAtual = 0;
-            let saldoMoedasBTC = 0;
-            let totalColateralBTCUSD = 583.31; // Fallback padrão da imagem
-            let totalDividaUSDTUSD = 318.92;   // Fallback padrão da imagem
-            
+            // Valores de segurança caso a carteira não possua saldo no momento da consulta
+            let precoBtcAtual = 98500;
+            let saldoMoedasBTC = 0.00592; 
+            let totalColateralBTCUSD = 583.31;
+            let totalDividaUSDTUSD = 318.92;
             let saldoSkhybUSD = 0.05;
             let saldoNvdabUSD = 0.03;
 
-            if (data && Array.isArray(data)) {
-                // 1. BTC (Geralmente listado como BTCB na BSC)
-                const tokenBtc = data.find(t => t.token && (t.token.symbol === "BTCB" || t.token.symbol === "BTC"));
+            if (data && data.status === "1" && Array.isArray(data.result)) {
+                const tokens = data.result;
+
+                // 1. Localização e Processamento do BTCB
+                const tokenBtc = tokens.find(t => t.symbol === "BTCB" || t.symbol === "BTC");
                 if (tokenBtc) {
-                    precoBtcAtual = parseFloat(tokenBtc.token.exchange_rate || 0);
-                    const saldoBrutoBtc = BigInt(tokenBtc.value || 0);
-                    saldoMoedasBTC = Number(saldoBrutoBtc) / 10**parseInt(tokenBtc.token.decimals || 18);
-                    if (saldoMoedasBTC > 0 && precoBtcAtual > 0) {
+                    const preco = parseFloat(tokenBtc.usd_price || 0);
+                    if(preco > 0) precoBtcAtual = preco;
+                    
+                    const saldoBruto = BigInt(tokenBtc.balance || 0);
+                    const decimais = parseInt(tokenBtc.decimals || 18);
+                    const saldoCalculado = Number(saldoBruto) / (10 ** decimais);
+                    if (saldoCalculado > 0) {
+                        saldoMoedasBTC = saldoCalculado;
                         totalColateralBTCUSD = saldoMoedasBTC * precoBtcAtual;
                     }
                 }
 
-                // 2. USDT
-                const tokenUsdt = data.find(t => t.token && t.token.symbol === "USDT");
+                // 2. Localização e Processamento do USDT
+                const tokenUsdt = tokens.find(t => t.symbol === "USDT");
                 if (tokenUsdt) {
-                    const saldoBrutoUsdt = BigInt(tokenUsdt.value || 0);
-                    const saldoMovelUsdt = Number(saldoBrutoUsdt) / 10**parseInt(tokenUsdt.token.decimals || 18);
-                    if (saldoMovelUsdt > 0) totalDividaUSDTUSD = saldoMovelUsdt;
+                    const saldoBruto = BigInt(tokenUsdt.balance || 0);
+                    const decimais = parseInt(tokenUsdt.decimals || 18);
+                    const saldoCalculado = Number(saldoBruto) / (10 ** decimais);
+                    if (saldoCalculado > 0) totalDividaUSDTUSD = saldoCalculado;
                 }
 
-                // 3. SKHYB
-                const tokenSkhyb = data.find(t => t.token && t.token.symbol === "SKHYB");
-                if (tokenSkhyb && tokenSkhyb.token.exchange_rate) {
-                    const saldoBrutoSk = BigInt(tokenSkhyb.value || 0);
-                    const moedasSk = Number(saldoBrutoSk) / 10**parseInt(tokenSkhyb.token.decimals || 18);
-                    saldoSkhybUSD = moedasSk * parseFloat(tokenSkhyb.token.exchange_rate);
+                // 3. Localização e Processamento do SKHYB
+                const tokenSkhyb = tokens.find(t => t.symbol === "SKHYB");
+                if (tokenSkhyb) {
+                    const preco = parseFloat(tokenSkhyb.usd_price || 0);
+                    const saldoBruto = BigInt(tokenSkhyb.balance || 0);
+                    const decimais = parseInt(tokenSkhyb.decimals || 18);
+                    const saldoCalculado = Number(saldoBruto) / (10 ** decimais);
+                    if (saldoCalculado > 0 && preco > 0) saldoSkhybUSD = saldoCalculado * preco;
                 }
 
-                // 4. NVDAB
-                const tokenNvdab = data.find(t => t.token && t.token.symbol === "NVDAB");
-                if (tokenNvdab && tokenNvdab.token.exchange_rate) {
-                    const saldoBrutoNv = BigInt(tokenNvdab.value || 0);
-                    const moedasNv = Number(saldoBrutoNv) / 10**parseInt(tokenNvdab.token.decimals || 18);
-                    saldoNvdabUSD = moedasNv * parseFloat(tokenNvdab.token.exchange_rate);
+                // 4. Localização e Processamento do NVDAB
+                const tokenNvdab = tokens.find(t => t.symbol === "NVDAB");
+                if (tokenNvdab) {
+                    const preco = parseFloat(tokenNvdab.usd_price || 0);
+                    const saldoBruto = BigInt(tokenNvdab.balance || 0);
+                    const decimais = parseInt(tokenNvdab.decimals || 18);
+                    const saldoCalculado = Number(saldoBruto) / (10 ** decimais);
+                    if (saldoCalculado > 0 && preco > 0) saldoNvdabUSD = saldoCalculado * preco;
                 }
             }
 
-            // Fallback caso o preço do BTC venha zerado da API
-            if (precoBtcAtual === 0) precoBtcAtual = 98500;
-            if (saldoMoedasBTC === 0) saldoMoedasBTC = totalColateralBTCUSD / precoBtcAtual;
-
-            // Cálculos matemáticos de saúde financeira (Padrão Venus Protocol M稳定)
+            // Regras matemáticas da Venus Protocol para posições DeFi
             const collateralFactorBTC = 0.75; 
             const totalColateralCalculado = (totalColateralBTCUSD * collateralFactorBTC) + saldoSkhybUSD + saldoNvdabUSD;
-            
-            // Health Factor = (Colateral total ponderado) / Dívida Total
             const healthFactor = totalDividaUSDTUSD > 0 ? (totalColateralCalculado / totalDividaUSDTUSD) : 99.9;
-            
-            // Preço de Liquidação estimado baseado no ponto crítico do Health Factor = 1
             const precoLiquidacaoBTC = totalDividaUSDTUSD / (saldoMoedasBTC * collateralFactorBTC);
 
-            // Atualização da Interface Visual (DOM)
+            // Renderização dos dados tratados na interface
             document.getElementById("btc-fornecido").innerText = `US$ ${totalColateralBTCUSD.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById("btc-preco-liquidacao").innerText = `US$ ${precoLiquidacaoBTC.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
