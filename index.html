@@ -53,7 +53,7 @@
 
             <div class="venus-health-container">
                 <span class="balance-label">Saúde no Venus Protocol:</span>
-                <span class="health-score-value" id="venus-health">Consultando rede...</span>
+                <span class="health-score-value" id="venus-health">Consultando...</span>
             </div>
         </div>
 
@@ -111,8 +111,10 @@
     </div>
 
     <script>
-        // Mude este endereço para a carteira que tem os empréstimos ativos na Venus
         const wallet = "0x49F8739791713858A6718564f035f8c35905829C";
+        
+        // Proxy para quebrar o bloqueio de segurança (CORS) do navegador do celular
+        const proxy = "https://corsproxy.io?";
 
         function atualizarInterfacePreco(btcPrice) {
             document.getElementById("btc-live-price").innerText = "BTC Atual: " + btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -127,7 +129,8 @@
         }
 
         function loadBitcoinPrice() {
-            fetch("https://coindesk.com")
+            const url = proxy + encodeURIComponent("https://coindesk.com");
+            fetch(url)
                 .then(res => res.json())
                 .then(data => {
                     const price = data.bpi.USD.rate_float;
@@ -137,8 +140,9 @@
         }
 
         function loadWalletAndVenusData() {
-            // Busca saldo real de BNB
-            fetch("https://bscscan.com" + wallet + "&tag=latest")
+            // Saldo da carteira com o bypass de proxy
+            const urlBsc = proxy + encodeURIComponent("https://bscscan.com" + wallet + "&tag=latest");
+            fetch(urlBsc)
                 .then(res => res.json())
                 .then(data => {
                     if(data.status === "1") {
@@ -147,17 +151,14 @@
                     }
                 }).catch(e => document.getElementById("wallet-balance").innerText = "0.0000 BNB");
 
-            // Monitoramento Real do Fator de Saúde da Conta na Venus Protocol
-            fetch("https://venus.io" + wallet)
+            // Saúde Venus com o bypass de proxy
+            const urlVenus = proxy + encodeURIComponent("https://venus.io" + wallet);
+            fetch(urlVenus)
                 .then(res => res.json())
                 .then(data => {
                     const elHealth = document.getElementById("venus-health");
-                    
-                    // Verifica se a carteira tem dados de saúde estruturados na API
                     if (data && data.account && data.account.health && parseFloat(data.account.health) > 0) {
                         const healthScore = parseFloat(data.account.health);
-                        
-                        // Atualiza as cores dinamicamente dependendo se o fator sobe ou desce
                         if (healthScore >= 1.5) {
                             elHealth.innerHTML = `<span style="color: #10b981;">${healthScore.toFixed(2)} (Saudável)</span>`;
                         } else if (healthScore > 1.0 && healthScore < 1.5) {
@@ -166,6 +167,6 @@
                             elHealth.innerHTML = `<span style="color: #a63d3d;">${healthScore.toFixed(2)} (Risco Crítico)</span>`;
                         }
                     } else {
-                        // Resposta caso a carteira informada não possua empréstimos em andamento
                         elHealth.innerHTML = `<span style="color: #9ca3af;">Sem Empréstimos</span>`;
                     }
+                }).catch(e => {
