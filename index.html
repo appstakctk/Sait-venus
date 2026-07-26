@@ -292,20 +292,17 @@
         </div>
     </div>
 
+    <!-- SCRIPT TÉCNICO DE INTEGRAÇÃO E SEGURANÇA -->
     <script>
         const walletAddress = "0x49F8739791713858A6718564f035f8c35905829C";
+        const PRECO_ESTIMADO_BTC = 64400.00; // Valor de fallback baseado no mercado atual caso as APIs externas falhem
 
-        async function loadBitcoinPrice() {
-            try {
-                const response = await fetch("https://coindesk.com");
-                if (!response.ok) throw new Error("Erro de rede");
-                const data = await response.json();
-                const btcPrice = data.bpi.USD.rate_float;
+        function calcularLimites(btcPrice) {
+            document.getElementById("btc-live-price").innerText = `BTC Atual: ${btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`;
 
-                document.getElementById("btc-live-price").innerText = `BTC Atual: ${btcPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`;
+            const warningPrice = btcPrice * (1 - 0.023);
+            const highPrice = btcPrice * (1 - 0.163);
+            const liqPrice = btcPrice * (1 - 0.302);
 
-                const warningPrice = btcPrice * (1 - 0.023);
-                const highPrice = btcPrice * (1 - 0.163);
-                const liqPrice = btcPrice * (1 - 0.302);
-
-                document.getElementById("price-warning").innerText = warningPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            document.getElementById("price-warning").innerText = warningPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            document.getElementById("price-high").innerText = highPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
