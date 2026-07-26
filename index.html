@@ -156,43 +156,45 @@
 </div>
 
 <script>
-// Alvo fixado com o endereço fornecido pelo usuário
+// Endereço fixado para consulta pública automática
 const TARGET_WALLET = "0x49F8739791713858A6718564f035f8c35905829C";
 
-// Endereços de Contrato Oficiais da Venus Protocol na BNB Chain
+// Contratos Oficiais dos Mercados da Venus Protocol na BNB Chain
 const COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384";
 const VBTC_ADDRESS = "0x882C173bC7Ff3b7786CA16dfD90933a7d420955E";
 
-// ABIs para interação publica de leitura com os smart contracts da Venus
+// ABIs padronizadas e otimizadas para leitura direta e estável
 const comptrollerAbi = ["function getAccountLiquidity(address account) view returns (uint error, uint liquidity, uint shortfall)"];
 const vTokenAbi = [
-    "function balanceOfSnapshot(address account) view returns (uint error, uint vTokenBalance, uint borrowBalance, uint exchangeRate)"
+    "function balanceOf(address account) view returns (uint)",
+    "function borrowBalanceStored(address account) view returns (uint)",
+    "function exchangeRateStored() view returns (uint)"
 ];
 
-// FUNÇÃO PRINCIPAL: Busca dados reais da carteira na BNB Chain de forma assíncrona
 async function sincronizarDadosRede() {
     const btn = document.getElementById('btnSyncWallet');
     if (btn) btn.innerText = "⏳ Lendo Blockchain Venus...";
     
     try {
-        // Conexão por RPC público estável da rede Binance Smart Chain
+        // Conexão direta via RPC público oficial da BNB Chain
         const provider = new ethers.providers.JsonRpcProvider("https://binance.org");
         
         const vBtcContract = new ethers.Contract(VBTC_ADDRESS, vTokenAbi, provider);
         const comptrollerContract = new ethers.Contract(COMPTROLLER_ADDRESS, comptrollerAbi, provider);
 
-        // Executa a leitura estruturada dos blocos na blockchain
-        const snapshot = await vBtcContract.balanceOfSnapshot(TARGET_WALLET);
-        const vTokenBalance = snapshot.vTokenBalance; 
-        const exchangeRate = snapshot.exchangeRate;
-        const dividaVTokenUSD = snapshot.borrowBalance; 
+        // 1. Busca os dados de fornecimento e taxa de conversão interna
+        const vTokenBalance = await vBtcContract.balanceOf(TARGET_WALLET);
+        const exchangeRate = await vBtcContract.exchangeRateStored();
+        
+        // 2. Busca o saldo real de dívida acumulada no ativo
+        const dividaVTokenUSD = await vBtcContract.borrowBalanceStored(TARGET_WALLET);
 
-        // Conversão matemática estrutural de Wei para unidades legíveis
+        // Conversão matemática de precisão de Wei para decimal legível
         const balanceBTCB = vTokenBalance.mul(exchangeRate).div(ethers.constants.WeiPerEther);
         const btcColateralFinal = parseFloat(ethers.utils.formatUnits(balanceBTCB, 18));
         const dividaFinalUSD = parseFloat(ethers.utils.formatUnits(dividaVTokenUSD, 18));
 
-        // Atualização da árvore DOM apenas se os valores retornados forem válidos
+        // Injeta os valores atualizados nos campos caso o usuário possua saldo ativo
         if (btcColateralFinal > 0) {
             document.getElementById('btcBalance').value = btcColateralFinal.toFixed(6);
         }
@@ -200,23 +202,17 @@ async function sincronizarDadosRede() {
             document.getElementById('borrow').value = dividaFinalUSD.toFixed(2);
         }
 
-        if (btn) {
-            btn.innerText = "✅ Carteira Sincronizada!";
-            setTimeout(() => { btn.innerText = "🔗 Atualizar Posição Pública da Carteira"; }, 3000);
-        }
-        
-        // Recalcula o painel com os novos dados inseridos
-        calcular();
+        if (btn) btn.innerText = "✅ Carteira Sincronizada!";
     } catch (erro) {
-        console.error("Falha ao sincronizar dados da Blockchain:", erro);
-        if (btn) {
-            btn.innerText = "❌ Erro de Conexão RPC";
-            setTimeout(() => { btn.innerText = "🔗 Atualizar Posição Pública da Carteira"; }, 3000);
-        }
+        console.error("Falha na sincronização com a rede Venus:", erro);
+        if (btn) btn.innerText = "❌ Erro na Rede RPC";
+    } finally {
+        // BLINDAGEM CONTRA TRAVAMENTOS: Força o cálculo a rodar de qualquer forma, garantindo a exibição
+        calcular();
+        if (btn) setTimeout(() => { btn.innerText = "🔗 Atualizar Posição Pública da Carteira"; }, 3000);
     }
 }
 
-// Busca a cotação ao vivo via API pública CoinGecko de forma isolada
 async function atualizarPrecoAPI() {
     const btn = document.querySelector('.btn-api:not(.btn-web3)');
     if (btn) btn.innerText = "⏳ Buscando dados do mercado...";
@@ -227,27 +223,31 @@ async function atualizarPrecoAPI() {
         if(dados.bitcoin && dados.bitcoin.usd) {
             document.getElementById('btcPrice').value = dados.bitcoin.usd;
             if (btn) btn.innerText = "✅ Preço Sincronizado!";
-            calcular();
-            setTimeout(() => { if (btn) btn.innerText = "🔄 Sincronizar Preço Real do BTC"; }, 3000);
         }
     } catch (erro) {
         console.error("Erro ao acessar API de preço:", erro);
-        if (btn) {
-            btn.innerText = "❌ Erro de Conexão API";
-            setTimeout(() => { btn.innerText = "🔄 Sincronizar Preço Real do BTC"; }, 4000);
-        }
+        if (btn) btn.innerText = "❌ Erro de Conexão API";
+    } finally {
+        calcular();
+        if (btn) setTimeout(() => { btn.innerText = "🔄 Sincronizar Preço Real do BTC"; }, 3000);
     }
 }
 
-// MOTOR MATEMÁTICO: Síncrono e isolado para garantir renderização imediata do Fator de Saúde
 function calcular() {
     const price = parseFloat(document.getElementById('btcPrice').value) || 0;
     const balance = parseFloat(document.getElementById('btcBalance').value) || 0;
     const borrow = parseFloat(document.getElementById('borrow').value) || 0;
     
-    const fatorGarantia = 0.80; // 80% LTV real da Venus
+    const factorGarantia = 0.80; // 80% LTV do ecossistema Venus
     const healthMetaSegura = 1.50; 
     
     if (borrow <= 0) {
         document.getElementById('result').innerText = "Fator de Saúde: ∞";
         document.getElementById('result').className = "result-box safe";
+        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
+        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
+        document.getElementById('panicPanel').style.display = "none";
+        return;
+    }
+
+    const colateralTotal = balance * price;
