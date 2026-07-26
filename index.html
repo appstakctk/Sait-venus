@@ -79,7 +79,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Central Health Indicator Ring Block */
         .health-ring-wrapper {
             position: relative;
             display: flex;
@@ -302,11 +301,9 @@
             <div class="badge-critical">CRÍTICO</div>
         </div>
         
-        <!-- Bloco Circular Dinâmico -->
         <div class="health-ring-wrapper">
             <svg class="health-svg" width="220" height="220">
                 <circle class="health-circle-bg" cx="110" cy="110" r="100"></circle>
-                <!-- Perímetro aproximado do círculo: 2 * PI * r = 628.3 -->
                 <circle class="health-circle-prog" id="health-bar" cx="110" cy="110" r="100" stroke-dasharray="628.3" stroke-dashoffset="0"></circle>
             </svg>
             <div class="inner-health-data">
@@ -350,3 +347,5 @@
                 <th style="width: 20%;">Saúde</th>
             </tr>
         </thead>
+        <tbody id="simulation-rows">
+            <tr><td><span class="drop-pct">-5%</span></td><td class="proj-price">US$ 61.477,75</td><td class="health-score health-good">1.37</td></tr>
