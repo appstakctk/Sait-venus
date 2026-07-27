@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Venus Protocol - Live Blockchain</title>
-    <script src="https://cloudflare.com" type="text/javascript"></script>
+    <title>Painel Venus Protocol - Live Real Time</title>
     <style>
         * {
             margin: 0;
@@ -195,7 +194,7 @@
         
         <div class="network-bar">
             <div class="wallet-info">Venus Blockchain (BEP20): <span>0x49F8...829C</span></div>
-            <div class="timer-info">Sync On-Chain: <span id="countdown">15s</span></div>
+            <div class="timer-info">Sync Real-Time: <span id="countdown">15s</span></div>
         </div>
 
         <!-- BLOCO 1 -->
@@ -212,7 +211,7 @@
                     <div class="dot"></div>
                     <div class="info-block">
                         <span class="label">Preço atual real (BTCB)</span>
-                        <span class="price" id="price-now">Lendo Blockchain...</span>
+                        <span class="price" id="price-now">Buscando...</span>
                     </div>
                     <span class="status-badge badge-now">AGORA</span>
                 </div>
@@ -221,7 +220,7 @@
                     <div class="dot"></div>
                     <div class="info-block">
                         <span class="label">Saúde <span id="label-health-warning">1.40</span> · zona de atenção</span>
-                        <span class="price" id="price-warning">Sincronizando...</span>
+                        <span class="price" id="price-warning">Calculando...</span>
                     </div>
                     <span class="status-badge badge-warning">ATENÇÃO</span>
                 </div>
@@ -230,7 +229,7 @@
                     <div class="dot"></div>
                     <div class="info-block">
                         <span class="label">Saúde 1,00 · liquidação</span>
-                        <span class="price" id="price-critical">Sincronizando...</span>
+                        <span class="price" id="price-critical">Calculando...</span>
                     </div>
                     <span class="status-badge badge-critical">CRÍTICO</span>
                 </div>
@@ -238,7 +237,7 @@
 
             <div class="footer-box">
                 <div class="info-block">
-                    <span class="footer-label">Distância até a liquidação (Sua Saúde Real: <span id="live-health-factor">--</span>)</span>
+                    <span class="footer-label">Distância até a liquidação (Sua Saúde Real: <span id="live-health-factor">1.40</span>)</span>
                     <span class="footer-value" id="distance-liquidation">Calculando...</span>
                 </div>
             </div>
@@ -263,7 +262,7 @@
                         </div>
                     </div>
                     <div class="risk-right">
-                        <span class="risk-price" id="risk-price-warning">Sincronizando...</span>
+                        <span class="risk-price" id="risk-price-warning">Calculando...</span>
                         <span class="risk-pct" id="risk-pct-warning">--</span>
                     </div>
                 </div>
@@ -277,7 +276,7 @@
                         </div>
                     </div>
                     <div class="risk-right">
-                        <span class="risk-price" id="risk-price-high">Sincronizando...</span>
+                        <span class="risk-price" id="risk-price-high">Calculando...</span>
                         <span class="risk-pct" id="risk-pct-high">--</span>
                     </div>
                 </div>
@@ -288,3 +287,6 @@
                         <div class="risk-title-block">
                             <span class="risk-name">Liquidação</span>
                             <span class="risk-sub">Saúde 1.00</span>
+                        </div>
+                    </div>
+                    <div class="risk-right">
