@@ -25,7 +25,6 @@
             box-sizing: border-box;
         }
 
-        /* Topbar */
         .header {
             display: flex;
             justify-content: space-between;
@@ -67,7 +66,6 @@
             display: inline-block;
         }
 
-        /* Hero Box */
         .hero-box {
             background-color: #111614;
             border: 1px solid #222a27;
@@ -129,7 +127,6 @@
             font-weight: 500;
         }
 
-        /* Cards Fixos */
         .card {
             background-color: #111614;
             border: 1px solid #222a27;
@@ -182,7 +179,6 @@
             padding-top: 10px;
         }
 
-        /* Painéis */
         .panel {
             background-color: #111614;
             border: 1px solid #222a27;
@@ -271,7 +267,6 @@
 
     <div class="container">
         
-        <!-- Cabeçalho -->
         <div class="header">
             <div class="logo-area">
                 <p class="eyebrow">Venus Risk Terminal</p>
@@ -282,7 +277,6 @@
             </div>
         </div>
 
-        <!-- Painel Hero -->
         <div class="hero-box">
             <div class="pill">Core Pool · BNB Chain</div>
             <div class="hero-title">Risco sob controle.<br/><span>Antes do mercado virar.</span></div>
@@ -295,7 +289,7 @@
             </div>
         </div>
 
-        <!-- Bloco de Cartões Únicos -->
+        <!-- 1. Bloco do BTC -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">BTC / USDT</span>
@@ -308,6 +302,7 @@
             </div>
         </div>
 
+        <!-- 2. Bloco do Colateral -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Colateral BTCB</span>
@@ -320,6 +315,7 @@
             </div>
         </div>
 
+        <!-- 3. Bloco Único da Dívida -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">Dívida total</span>
@@ -332,7 +328,6 @@
             </div>
         </div>
 
-        <!-- Painel Limites de Segurança -->
         <div class="panel">
             <div class="panel-header">
                 <p class="panel-subtitle">LIMITES DE SEGURANÇA</p>
@@ -350,3 +345,8 @@
                 <span class="badge badge-wait">ATENÇÃO</span>
             </div>
             <div class="row">
+                <span class="row-desc">Saúde 1,00 · liquidação</span>
+                <strong>—</strong>
+                <span class="badge badge-danger">CRÍTICO</span>
+            </div>
+
