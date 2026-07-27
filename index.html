@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Limites Dinâmicos - Pontos de risco do BTC</title>
+    <title>Limites de Segurança - Pontos de Decisão</title>
     <style>
         * {
             margin: 0;
@@ -23,8 +23,8 @@
         }
 
         .card {
-            background-color: #0d0f12;
-            border: 1px solid #1c2024;
+            background-color: #0b110a;
+            border: 1px solid #1c271a;
             border-radius: 16px;
             width: 100%;
             max-width: 420px;
@@ -39,7 +39,7 @@
         }
 
         .header-title {
-            color: #6c7a89;
+            color: #7b9474;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -53,49 +53,100 @@
             color: #ffffff;
         }
 
-        .icon-lightbulb {
-            color: #5c6773;
-            display: flex;
+        .icon-gauge {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #555;
+            border-radius: 50%;
+            border-top-color: transparent;
+            transform: rotate(45deg);
+            opacity: 0.7;
         }
 
-        .risk-list {
-            display: flex;
-            flex-direction: column;
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+            margin-bottom: 28px;
         }
 
-        .risk-item {
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 10px;
+            bottom: 10px;
+            width: 2px;
+            background: linear-gradient(to bottom, #99ff33 0%, #ffcc00 50%, #ff3333 100%);
+        }
+
+        .timeline-item {
+            position: relative;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
-            border-bottom: 1px solid #1c2024;
+            margin-bottom: 28px;
         }
 
-        .risk-item:first-child { padding-top: 10px; }
-        .risk-item:last-child { border-bottom: none; padding-bottom: 10px; }
+        .timeline-item:last-child { margin-bottom: 0; }
 
-        .risk-left {
+        .dot {
+            position: absolute;
+            left: -32px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #0b110a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dot::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .item-now .dot { border: 2px solid #99ff33; }
+        .item-now .dot::after { background-color: #99ff33; }
+        
+        .item-warning .dot { border: 2px solid #ffcc00; }
+        .item-warning .dot::after { background-color: #ffcc00; }
+
+        .item-critical .dot { border: 2px solid #ff3355; }
+        .item-critical .dot::after { background-color: #ff3355; }
+
+        .info-block { display: flex; flex-direction: column; }
+        .label { color: #667061; font-size: 13px; margin-bottom: 4px; }
+        .price { font-size: 24px; font-weight: 700; color: #ffffff; }
+
+        .status-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-now { background-color: #172412; color: #99ff33; }
+        .badge-warning { background-color: #2b210c; color: #ffcc00; }
+        .badge-critical { background-color: #2d1417; color: #ff3355; }
+
+        .footer-box {
+            background-color: #111a0e;
+            border: 1px solid #1d2e19;
+            border-radius: 12px;
+            padding: 16px;
             display: flex;
             align-items: center;
             gap: 16px;
         }
 
-        .risk-bar {
-            width: 4px;
-            height: 36px;
-            border-radius: 2px;
-        }
-        .bar-warning { background-color: #ffcc00; }
-        .bar-high { background-color: #ff7700; }
-        .bar-liquidation { background-color: #ff3355; }
-
-        .risk-title-block { display: flex; flex-direction: column; }
-        .risk-name { font-size: 18px; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
-        .risk-sub { color: #5c6773; font-size: 13px; }
-
-        .risk-right { text-align: right; display: flex; flex-direction: column; }
-        .risk-price { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 4px; }
-        .risk-pct { color: #5c6773; font-size: 13px; }
+        .icon-shield { color: #99ff33; display: flex; }
+        .footer-text { display: flex; flex-direction: column; }
+        .footer-label { color: #667061; font-size: 12px; margin-bottom: 4px; }
+        .footer-value { color: #99ff33; font-size: 18px; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -103,62 +154,51 @@
     <div class="card">
         <div class="header">
             <div>
-                <div class="header-title">Limites Dinâmicos</div>
-                <div class="header-subtitle">Pontos de risco do BTC</div>
+                <div class="header-title">Limites de Segurança</div>
+                <div class="header-subtitle">Pontos de decisão</div>
             </div>
-            <div class="icon-lightbulb">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
-                    <line x1="9" y1="18" x2="15" y2="18"></line>
-                    <line x1="10" y1="22" x2="14" y2="22"></line>
-                </svg>
+            <div class="icon-gauge"></div>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-item item-now">
+                <div class="dot"></div>
+                <div class="info-block">
+                    <span class="label">Preço atual</span>
+                    <span class="price">US$ 65.010,22</span>
+                </div>
+                <span class="status-badge badge-now">AGORA</span>
+            </div>
+
+            <div class="timeline-item item-warning">
+                <div class="dot"></div>
+                <div class="info-block">
+                    <span class="label">Saúde 1,40 · zona de atenção</span>
+                    <span class="price">US$ 58.389,31</span>
+                </div>
+                <span class="status-badge badge-warning">ATENÇÃO</span>
+            </div>
+
+            <div class="timeline-item item-critical">
+                <div class="dot"></div>
+                <div class="info-block">
+                    <span class="label">Saúde 1,00 · liquidação</span>
+                    <span class="price">US$ 41.705,15</span>
+                </div>
+                <span class="status-badge badge-critical">CRÍTICO</span>
             </div>
         </div>
 
-        <div class="risk-list">
-            <!-- Item: Aviso -->
-            <div class="risk-item">
-                <div class="risk-left">
-                    <div class="risk-bar bar-warning"></div>
-                    <div class="risk-title-block">
-                        <span class="risk-name">Aviso</span>
-                        <span class="risk-sub">Saúde 1.40</span>
-                    </div>
-                </div>
-                <div class="risk-right">
-                    <span class="risk-price">US$ 58.402,62</span>
-                    <span class="risk-pct">-10.1% do preço atual</span>
-                </div>
+        <div class="footer-box">
+            <div class="icon-shield">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <polyline points="9 11 11 13 15 9"></polyline>
+                </svg>
             </div>
-
-            <!-- Item: Risco Alto -->
-            <div class="risk-item">
-                <div class="risk-left">
-                    <div class="risk-bar bar-high"></div>
-                    <div class="risk-title-block">
-                        <span class="risk-name">Risco alto</span>
-                        <span class="risk-sub">Saúde 1.20</span>
-                    </div>
-                </div>
-                <div class="risk-right">
-                    <span class="risk-price">US$ 50.058,46</span>
-                    <span class="risk-pct">-22.9% do preço atual</span>
-                </div>
-            </div>
-
-            <!-- Item: Liquidação -->
-            <div class="risk-item">
-                <div class="risk-left">
-                    <div class="risk-bar bar-liquidation"></div>
-                    <div class="risk-title-block">
-                        <span class="risk-name">Liquidação</span>
-                        <span class="risk-sub">Saúde 1.00</span>
-                    </div>
-                </div>
-                <div class="risk-right">
-                    <span class="risk-price">US$ 41.714,30</span>
-                    <span class="risk-pct">-35.8% do preço atual</span>
-                </div>
+            <div class="footer-text">
+                <span class="footer-label">Distância até a liquidação</span>
+                <span class="footer-value">35.8% de queda</span>
             </div>
         </div>
     </div>
