@@ -1,35 +1,72 @@
-<script>
-    const priceElement = document.getElementById("btc-price");
-
-    // Função que busca o preço diretamente da API HTTP da Binance
-    async function buscarPrecoBTC() {
-        try {
-            const resposta = await fetch("https://binance.com");
-            
-            if (!resposta.ok) throw new Error("Erro na resposta da rede");
-            
-            const dados = await resposta.json();
-            const preco = parseFloat(dados.price);
-
-            // Formata o valor como moeda americana (US$)
-            priceElement.innerText = preco.toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            });
-            
-            // Restaura a cor padrão caso tenha dado erro antes
-            priceElement.style.color = "#ffffff";
-
-        } catch (erro) {
-            console.error("Erro ao buscar dados da Binance:", erro);
-            priceElement.innerText = "Erro ao carregar";
-            priceElement.style.color = "#ff4a4a";
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preço do BTC - Binance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-    }
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #1e1e1e;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        h1 { color: #F3BA2F; margin-bottom: 10px; }
+        .preco { font-size: 2.5rem; font-weight: bold; }
+    </style>
+</head>
+<body>
 
-    // Executa a função assim que a página abre
-    buscarPrecoBTC();
+    <div class="container">
+        <h1>Bitcoin (BTC / USDT)</h1>
+        <div class="preco" id="btc-price">Carregando...</div>
+    </div>
 
-    // Atualiza o preço automaticamente a cada 5 segundos
-    setInterval(buscarPrecoBTC, 5000);
-</script>
+    <script>
+        const priceElement = document.getElementById("btc-price");
+
+        async function buscarPrecoBTC() {
+            try {
+                // Endpoint HTTP público da Binance
+                const resposta = await fetch("https://binance.com");
+                
+                if (!resposta.ok) throw new Error("Erro na rede");
+                
+                const dados = await resposta.json();
+                const preco = parseFloat(dados.price);
+
+                // Atualiza o texto com a formatação correta em dólar
+                priceElement.innerText = preco.toLocaleString('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                });
+                
+                priceElement.style.color = "#ffffff";
+
+            } catch (erro) {
+                console.error("Erro na API da Binance:", erro);
+                priceElement.innerText = "Erro ao carregar";
+                priceElement.style.color = "#ff4a4a";
+            }
+        }
+
+        // Executa imediatamente ao abrir
+        buscarPrecoBTC();
+
+        // Atualiza a cada 5 segundos
+        setInterval(buscarPrecoBTC, 5000);
+    </script>
+
+</body>
+</html>
