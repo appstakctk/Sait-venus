@@ -165,21 +165,22 @@ async function sincronizarDados() {
         // 1. Busca preço atualizado do Bitcoin via API da Binance
         const priceResponse = await fetch("https://binance.com");
         const priceData = await priceResponse.json();
-        const btcPrice = parseFloat(priceData.price);
-        document.getElementById('btcPrice').value = btcPrice.toFixed(2);
+        if (priceData && priceData.price) {
+            const btcPrice = parseFloat(priceData.price);
+            document.getElementById('btcPrice').value = btcPrice.toFixed(2);
+        }
 
         // 2. Inicializa o provedor RPC público da BNB Chain
         const provider = new ethers.JsonRpcProvider("https://binance.org");
 
-        // ABIs Mínimos necessários para interagir com os contratos inteligentes da Venus
+        // ABIs Mínimos para interagir com os contratos inteligentes da Venus
         const comptrollerAbi = ["function getAccountLiquidity(address) view returns (uint, uint, uint)"];
         const vTokenAbi = [
             "function balanceOf(address) view returns (uint)",
             "function borrowBalanceCurrent(address) view returns (uint)",
-            "function exchangeRateCurrent() returns (uint)"
+            "function exchangeRateCurrent() view returns (uint)"
         ];
 
-        // Endereços oficiais dos contratos principais do Venus Core Pool
         const COMPTROLLER_ADDRESS = "0xfD310710221b3302345654D9a3db199E0F2c9ae2";
         const VBTC_ADDRESS = "0x882C173bC7dF33f8A7b352057d215906D53d1000";
 
@@ -190,10 +191,9 @@ async function sincronizarDados() {
         const vBtcBalance = await vBtcContract.balanceOf(wallet);
         
         // Busca a taxa de conversão atual do vBTC interno para o ativo real (BTCB)
-        // Como exchangeRateCurrent altera estado na chamada padrão, usamos staticCall para ler de forma segura
-        const exchangeRate = await vBtcContract.exchangeRateCurrent.staticCall();
+        const exchangeRate = await vBtcContract.exchangeRateCurrent();
 
-        // Converte o saldo de vBTC para a quantidade real de BTCB (considerando a matemática de 18 decimais do protocolo)
+        // Converte o saldo de vBTC para a quantidade real de BTCB
         const btcBalanceUnderlying = (vBtcBalance * exchangeRate) / ethers.parseUnits("1", 18);
         const btcEstimated = Number(btcBalanceUnderlying) / 1e18;
 
@@ -205,15 +205,14 @@ async function sincronizarDados() {
         const liquidityInfo = await comptrollerContract.getAccountLiquidity(wallet);
         const deficitUsd = Number(liquidityInfo[2]) / 1e18; 
 
-        // Se houver saldo pendente de empréstimo ou déficit registrado, calcula a dívida total direta
         if (deficitUsd > 0) {
             document.getElementById('borrow').value = deficitUsd.toFixed(2);
         } else {
-            // Fallback: Busca empréstimo de forma direta no contrato caso o pool principal use sub-ativos
-            const borrowBalance = await vBtcContract.borrowBalanceCurrent.staticCall(wallet);
+            const btcPriceCurrent = parseInputField('btcPrice');
+            const borrowBalance = await vBtcContract.borrowBalanceCurrent(wallet);
             const borrowConverted = Number(borrowBalance) / 1e18;
             if (borrowConverted > 0) {
-                document.getElementById('borrow').value = (borrowConverted * btcPrice).toFixed(2);
+                document.getElementById('borrow').value = (borrowConverted * btcPriceCurrent).toFixed(2);
             }
         }
 
@@ -222,8 +221,8 @@ async function sincronizarDados() {
 
     } catch (error) {
         console.error(error);
-        statusMsg.innerText = "Erro ao acessar nós RPC. Verifique sua conexão ou tente mais tarde.";
-        statusMsg.style.color = "#f85149";
+        statusMsg.innerText = "Nó RPC ocupado. Usando os valores inseridos nas caixas de texto.";
+        statusMsg.style.color = "#d29922";
     } finally {
         syncBtn.disabled = false;
         calcular();
@@ -251,3 +250,8 @@ function calcular() {
     const resultDiv = document.getElementById('result');
     resultDiv.innerText = "Fator de Saúde Atual: " + hfAtual.toFixed(2);
     
+    if (hfAtual >= 2.0) resultDiv.className = "result-box super-safe";
+    else if (hfAtual >= 1.5) resultDiv.className = "result-box safe";
+    else if (hfAtual >= 1.15) resultDiv.className = "result-box moderate";
+    else resultDiv.className = "result-box danger";
+
