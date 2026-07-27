@@ -3,290 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Venus Protocol - Live Real Time</title>
+    <title>Calculadora de Risco e Projeções - Venus</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
         body {
-            background-color: #000000;
-            color: #ffffff;
+            font-family: Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
             padding: 20px;
             display: flex;
-            justify-content: center;
-        }
-
-        .dashboard-container {
-            width: 100%;
-            max-width: 420px;
-            display: flex;
             flex-direction: column;
-            gap: 20px;
-        }
-
-        .network-bar {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            background: #0d0f12;
-            padding: 10px 16px;
-            border-radius: 12px;
-            border: 1px solid #1c2024;
-            font-size: 11px;
         }
-
-        .wallet-info { color: #6c7a89; }
-        .wallet-info span { color: #ffffff; font-weight: 600; }
-        .timer-info { color: #6c7a89; }
-        .timer-info span { color: #99ff33; font-weight: bold; }
-
-        .card {
+        .container {
+            background-color: #161b22;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            max-width: 500px;
             width: 100%;
-            padding: 24px;
-            border-radius: 16px;
+            margin-bottom: 20px;
         }
-
-        .card-safety {
-            background-color: #0b110a;
-            border: 1px solid #1c271a;
+        h2, h3 { text-align: center; color: #58a6ff; margin-top: 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            background-color: #0d1117;
+            color: #f0f6fc;
+            box-sizing: border-box;
+            font-size: 16px;
         }
-
-        .card-risk {
-            background-color: #0d0f12;
-            border: 1px solid #1c2024;
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #238636;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            transition: background 0.2s;
         }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 24px;
+        button:hover { background-color: #2ea043; }
+        button:disabled { background-color: #21262d; color: #8b949e; cursor: not-allowed; }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
         }
-
-        .header-title {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 6px;
+        .super-safe { background-color: #238636; color: white; }
+        .safe { background-color: #1f6feb; color: white; }
+        .moderate { background-color: #d29922; color: black; }
+        .danger { background-color: #f85149; color: white; }
+        .info { font-size: 14px; color: #8b949e; margin-top: 10px; text-align: center; font-weight: bold; }
+        .status-msg { font-size: 12px; color: #58a6ff; text-align: center; margin-top: -10px; margin-bottom: 15px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
         }
-
-        .card-safety .header-title { color: #7b9474; }
-        .card-risk .header-title { color: #6c7a89; }
-
-        .header-subtitle {
-            font-size: 22px;
-            font-weight: 600;
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #30363d;
         }
-
-        .timeline {
-            position: relative;
-            padding-left: 32px;
-            margin-bottom: 28px;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 5px;
-            top: 10px;
-            bottom: 10px;
-            width: 2px;
-            background: linear-gradient(to bottom, #99ff33, #ffcc00, #ff3333);
-        }
-
-        .timeline-item {
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-        }
-
-        .timeline-item:last-child { margin-bottom: 0; }
-
-        .dot {
-            position: absolute;
-            left: -32px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .item-now .dot { border: 2px solid #99ff33; background: #99ff33; }
-        .item-warning .dot { border: 2px solid #ffcc00; background: #ffcc00; }
-        .item-critical .dot { border: 2px solid #ff3355; background: #ff3355; }
-
-        .info-block { display: flex; flex-direction: column; }
-        .label { color: #667061; font-size: 13px; margin-bottom: 4px; }
-        .price { font-size: 24px; font-weight: 700; }
-
-        .status-badge {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .badge-now { background-color: #172412; color: #99ff33; }
-        .badge-warning { background-color: #2b210c; color: #ffcc00; }
-        .badge-critical { background-color: #2d1417; color: #ff3355; }
-
-        .footer-box {
-            background-color: #111a0e;
-            border: 1px solid #1d2e19;
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .footer-label { color: #667061; font-size: 12px; margin-bottom: 4px; }
-        .footer-value { color: #99ff33; font-size: 18px; font-weight: 700; }
-
-        .risk-list {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .risk-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 0;
-            border-bottom: 1px solid #1c2024;
-        }
-
-        .risk-item:last-child { border-bottom: none; }
-
-        .risk-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .risk-bar {
-            width: 4px;
-            height: 32px;
-            border-radius: 2px;
-        }
-        .bar-warning { background-color: #ffcc00; }
-        .bar-high { background-color: #ff7700; }
-        .bar-liquidation { background-color: #ff3355; }
-
-        .risk-title-block { display: flex; flex-direction: column; }
-        .risk-name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
-        .risk-sub { color: #5c6773; font-size: 12px; }
-
-        .risk-right { text-align: right; display: flex; flex-direction: column; }
-        .risk-price { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
-        .risk-pct { color: #5c6773; font-size: 12px; }
+        th { background-color: #21262d; color: #58a6ff; }
+        tr:hover { background-color: #21262d; }
+        .text-danger { color: #f85149; font-weight: bold; }
+        .text-warning { color: #d29922; font-weight: bold; }
+        .text-safe { color: #58a6ff; font-weight: bold; }
+        .text-super-safe { color: #3fb950; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-container">
+<div class="container">
+    <h2>Simulador Dinâmico Venus</h2>
+    
+    <div class="input-group">
+        <label>Endereço da Carteira BSC:</label>
+        <input type="text" id="walletAddress" value="0x49F8739791713858A6718564f035f8c35905829C">
+    </div>
+
+    <button id="syncBtn" onclick="sincronizarDados()">Sincronizar Dados via API</button>
+    <div id="statusMsg" class="status-msg">Pronto para sincronizar.</div>
+
+    <div class="input-group">
+        <label>Preço Atual do BTC no Mercado (US$):</label>
+        <input type="number" id="btcPrice" value="60000" oninput="calcular()">
+    </div>
+
+    <div class="input-group">
+        <label>Seu Saldo BTCB (Colateral):</label>
+        <input type="number" id="btcBalance" value="0.010918" step="0.000001" oninput="calcular()">
+    </div>
+
+    <div class="input-group">
+        <label>Sua Dívida Total (US$):</label>
+        <input type="number" id="borrow" value="393.07" step="0.01" oninput="calcular()">
+    </div>
+
+    <div id="result" class="result-box moderate">
+        Fator de Saúde Atual: --
+    </div>
+    
+    <div id="liquidationPrice" class="info">
+        Preço limite de liquidação: US$ --
+    </div>
+</div>
+
+<div class="container">
+    <h3>Projeções Automáticas de Queda</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Queda</th>
+                <th>Preço BTC</th>
+                <th>Seu Colateral</th>
+                <th>Fator Saúde</th>
+            </tr>
+        </thead>
+        <tbody id="projectionTable">
+        </tbody>
+    </table>
+</div>
+
+<script>
+async function sincronizarDados() {
+    const wallet = document.getElementById('walletAddress').value.trim();
+    const syncBtn = document.getElementById('syncBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    if (!wallet.startsWith("0x") || wallet.length !== 42) {
+        statusMsg.innerText = "Erro: Endereço de carteira inválido.";
+        statusMsg.style.color = "#f85149";
+        return;
+    }
+
+    syncBtn.disabled = true;
+    statusMsg.innerText = "Buscando dados atualizados do mercado e da carteira...";
+    statusMsg.style.color = "#58a6ff";
+
+    try {
+        // 1. Busca preço em tempo real do BTC via API pública da Binance
+        const priceResponse = await fetch("https://binance.com");
+        const priceData = await priceResponse.json();
+        const btcPrice = parseFloat(priceData.price);
+        document.getElementById('btcPrice').value = btcPrice.toFixed(2);
+
+        // 2. Busca dados da conta via API oficial pública do Venus Protocol
+        const venusResponse = await fetch(`https://venus.io{wallet}`);
         
-        <div class="network-bar">
-            <div class="wallet-info">Venus Blockchain (BEP20): <span>0x49F8...829C</span></div>
-            <div class="timer-info">Sync Real-Time: <span id="countdown">15s</span></div>
-        </div>
+        if (!venusResponse.ok) throw new Error("Erro ao acessar a API da Venus.");
+        
+        const venusData = await venusResponse.json();
+        
+        if (venusData && venusData.data) {
+            const markets = venusData.data.markets || [];
+            
+            // Encontra especificamente o token BTCB (Bitcoin pareado na BSC)
+            const btcMarket = markets.find(m => m.symbol === "BTCB" || m.underlyingSymbol === "BTCB");
+            
+            if (btcMarket) {
+                // Converte fornecimento/colateral considerando decimais normais do token
+                const supplyTokens = parseFloat(btcMarket.supplyBalanceUnderlying) || 0;
+                document.getElementById('btcBalance').value = supplyTokens.toFixed(6);
+            } else {
+                statusMsg.innerText = "Aviso: Nenhuma posição em BTCB ativa encontrada nesta carteira.";
+            }
 
-        <!-- BLOCO 1 -->
-        <div class="card card-safety">
-            <div class="header">
-                <div>
-                    <div class="header-title">Limites de Segurança</div>
-                    <div class="header-subtitle">Pontos de decisão</div>
-                </div>
-            </div>
+            // O Venus armazena o valor total da dívida convertido diretamente em dólares (USD)
+            const totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
+            document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
+            
+            statusMsg.innerText = "Dados sincronizados com sucesso!";
+            statusMsg.style.color = "#3fb950";
+        } else {
+            throw new Error("Estrutura de dados inválida retornada pela Venus.");
+        }
 
-            <div class="timeline">
-                <div class="timeline-item item-now">
-                    <div class="dot"></div>
-                    <div class="info-block">
-                        <span class="label">Preço atual real (BTCB)</span>
-                        <span class="price" id="price-now">Buscando...</span>
-                    </div>
-                    <span class="status-badge badge-now">AGORA</span>
-                </div>
+    } catch (error) {
+        console.error(error);
+        statusMsg.innerText = "Erro ao sincronizar. Verifique a carteira ou tente novamente.";
+        statusMsg.style.color = "#f85149";
+    } finally {
+        syncBtn.disabled = false;
+        calcular();
+    }
+}
 
-                <div class="timeline-item item-warning">
-                    <div class="dot"></div>
-                    <div class="info-block">
-                        <span class="label">Saúde <span id="label-health-warning">1.40</span> · zona de atenção</span>
-                        <span class="price" id="price-warning">Calculando...</span>
-                    </div>
-                    <span class="status-badge badge-warning">ATENÇÃO</span>
-                </div>
+function calcular() {
+    const price = parseFloat(document.getElementById('btcPrice').value) || 0;
+    const balance = parseFloat(document.getElementById('btcBalance').value) || 0;
+    const borrow = parseFloat(document.getElementById('borrow').value) || 0;
+    const fatorGarantia = 0.80; 
+    
+    if (borrow <= 0) {
+        document.getElementById('result').innerText = "Fator de Saúde: ∞";
+        document.getElementById('result').className = "result-box super-safe";
+        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
+        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
+        return;
+    }
 
-                <div class="timeline-item item-critical">
-                    <div class="dot"></div>
-                    <div class="info-block">
-                        <span class="label">Saúde 1,00 · liquidação</span>
-                        <span class="price" id="price-critical">Calculando...</span>
-                    </div>
-                    <span class="status-badge badge-critical">CRÍTICO</span>
-                </div>
-            </div>
+    const colateralTotal = balance * price;
+    const hfAtual = (colateralTotal * fatorGarantia) / borrow;
+    const liqPrice = borrow / (balance * fatorGarantia);
 
-            <div class="footer-box">
-                <div class="info-block">
-                    <span class="footer-label">Distância até a liquidação (Sua Saúde Real: <span id="live-health-factor">1.40</span>)</span>
-                    <span class="footer-value" id="distance-liquidation">Calculando...</span>
-                </div>
-            </div>
-        </div>
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerText = "Fator de Saúde Atual: " + hfAtual.toFixed(2);
+    
+    if (hfAtual >= 2.0) resultDiv.className = "result-box super-safe";
+    else if (hfAtual >= 1.5) resultDiv.className = "result-box safe";
+    else if (hfAtual >= 1.15) resultDiv.className = "result-box moderate";
+    else resultDiv.className = "result-box danger";
 
-        <!-- BLOCO 2 -->
-        <div class="card card-risk">
-            <div class="header">
-                <div>
-                    <div class="header-title">Limites Dinâmicos</div>
-                    <div class="header-subtitle">Pontos de risco do BTC</div>
-                </div>
-            </div>
+    document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: US$ " + Math.round(liqPrice).toLocaleString('pt-BR');
 
-            <div class="risk-list">
-                <div class="risk-item">
-                    <div class="risk-left">
-                        <div class="risk-bar bar-warning"></div>
-                        <div class="risk-title-block">
-                            <span class="risk-name">Aviso</span>
-                            <span class="risk-sub">Saúde <span id="sub-health-warning">1.40</span></span>
-                        </div>
-                    </div>
-                    <div class="risk-right">
-                        <span class="risk-price" id="risk-price-warning">Calculando...</span>
-                        <span class="risk-pct" id="risk-pct-warning">--</span>
-                    </div>
-                </div>
+    const percentages = [0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20, 0.25, 0.26, 0.27, 0.28, 0.29, 0.30];
+    let htmlPrevisoes = "";
 
-                <div class="risk-item">
-                    <div class="risk-left">
-                        <div class="risk-bar bar-high"></div>
-                        <div class="risk-title-block">
-                            <span class="risk-name">Risco alto</span>
-                            <span class="risk-sub">Saúde 1.20</span>
-                        </div>
-                    </div>
-                    <div class="risk-right">
-                        <span class="risk-price" id="risk-price-high">Calculando...</span>
-                        <span class="risk-pct" id="risk-pct-high">--</span>
-                    </div>
-                </div>
+    percentages.forEach(queda => {
+        const precoProjetado = price * (1 - queda);
+        const colateralProjetado = balance * precoProjetado;
+        const hfProjetado = (colateralProjetado * fatorGarantia) / borrow;
+        
+        let classeStatus = "text-safe";
+        if (hfProjetado >= 2.0) classeStatus = "text-super-safe";
+        else if (hfProjetado < 1.15) classeStatus = "text-danger";
+        else if (hfProjetado < 1.30) classeStatus = "text-warning";
 
-                <div class="risk-item">
-                    <div class="risk-left">
-                        <div class="risk-bar bar-liquidation"></div>
-                        <div class="risk-title-block">
-                            <span class="risk-name">Liquidação</span>
-                            <span class="risk-sub">Saúde 1.00</span>
-                        </div>
-                    </div>
-                    <div class="risk-right">
+        if (precoProjetado > liqPrice) {
+            htmlPrevisoes += `
+                <tr>
+                    <td>-${(queda * 100).toFixed(0)}%</td>
+                    <td>US$ ${Math.round(precoProjetado).toLocaleString('pt-BR')}</td>
+                    <td>US$ ${colateralProjetado.toFixed(2)}</td>
+                    <td class="${classeStatus}">${hfProjetado.toFixed(2)}</td>
+                </tr>
+            `;
+        }
+    });
+
+    htmlPrevisoes += `
