@@ -6,56 +6,48 @@
     <title>Sentinela Venus · Monitor de Risco</title>
     
     <style>
-        /* Reset de segurança para garantir renderização */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             min-height: 100vh;
-            background-color: #090c0b !important;
-            color: #ffffff !important;
-            font-family: sans-serif;
+            background-color: #090c0b;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         .container {
             display: block;
             width: 100%;
-            max-width: 600px; /* Otimizado para visualização mobile */
+            max-width: 480px; /* Alinhamento focado para smartphones */
             margin: 0 auto;
-            padding: 15px;
+            padding: 16px;
             box-sizing: border-box;
         }
 
-        /* Topbar / Cabeçalho */
+        /* Topbar */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #222a27;
-            padding-bottom: 15px;
+            padding-bottom: 16px;
             margin-bottom: 20px;
-        }
-
-        .logo-area {
-            display: block;
         }
 
         .eyebrow {
             font-size: 10px;
             color: #f3ba2f;
-            letter-spacing: 1px;
-            margin: 0 0 4px 0;
+            letter-spacing: 1.5px;
+            margin: 0 0 2px 0;
             text-transform: uppercase;
+            font-weight: 600;
         }
 
         .title {
-            font-size: 22px;
-            font-weight: bold;
+            font-size: 24px;
+            font-weight: 700;
             margin: 0;
-        }
-
-        .status-area {
-            text-align: right;
         }
 
         .live-tag {
@@ -64,55 +56,59 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            font-weight: 500;
         }
 
         .live-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             background-color: #00e676;
             border-radius: 50%;
             display: inline-block;
         }
 
-        /* Bloco Hero */
+        /* Hero Box */
         .hero-box {
             background-color: #111614;
             border: 1px solid #222a27;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .pill {
             display: inline-block;
-            background-color: rgba(243, 186, 47, 0.1);
+            background-color: rgba(243, 186, 47, 0.08);
             color: #f3ba2f;
             padding: 4px 10px;
-            border-radius: 12px;
+            border-radius: 20px;
             font-size: 11px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            font-weight: 500;
         }
 
         .hero-title {
             font-size: 20px;
+            font-weight: 700;
             margin: 0 0 10px 0;
             line-height: 1.3;
         }
 
         .hero-title span {
             color: #ff6b6b;
+            font-style: normal;
         }
 
         .hero-desc {
             font-size: 13px;
             color: #8e9a96;
-            margin: 0 0 15px 0;
+            margin: 0 0 20px 0;
             line-height: 1.4;
         }
 
         .health-indicator {
             border-top: 1px solid #222a27;
-            padding-top: 15px;
+            padding-top: 16px;
             text-align: center;
         }
 
@@ -123,23 +119,25 @@
         }
 
         .health-value {
-            font-size: 28px;
-            font-weight: bold;
-            margin: 5px 0;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 4px 0;
         }
 
         .health-status {
             font-size: 11px;
             color: #f3ba2f;
+            font-weight: 500;
         }
 
-        /* Cartões de Métricas */
+        /* Cards Fixos (Evita sobreposição) */
         .card {
             background-color: #111614;
             border: 1px solid #222a27;
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
         }
 
         .card-header {
@@ -147,22 +145,29 @@
             justify-content: space-between;
             font-size: 12px;
             color: #8e9a96;
+            margin-bottom: 12px;
         }
 
         .card-title {
             color: #ffffff;
-            font-weight: bold;
+            font-weight: 600;
         }
 
-        /* Animação do esqueleto de carregamento */
-        .loading-line {
+        .card-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        /* Skeletons */
+        .skeleton-line {
             height: 24px;
             background: linear-gradient(90deg, #161d1a 25%, #222a27 50%, #161d1a 75%);
             background-size: 200% 100%;
             animation: loading-animation 1.5s infinite;
             border-radius: 4px;
-            margin: 15px 0;
-            width: 50%;
+            width: 60%;
         }
 
         @keyframes loading-animation {
@@ -175,19 +180,21 @@
             justify-content: space-between;
             font-size: 11px;
             color: #8e9a96;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 10px;
         }
 
-        /* Painéis de Decisão e Estresse */
+        /* Painéis */
         .panel {
             background-color: #111614;
             border: 1px solid #222a27;
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 16px;
+            margin-bottom: 12px;
         }
 
         .panel-header {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .panel-subtitle {
@@ -198,9 +205,9 @@
         }
 
         .panel-title {
-            font-size: 15px;
+            font-size: 16px;
             margin: 0;
-            font-weight: bold;
+            font-weight: 700;
         }
 
         .row {
@@ -208,8 +215,8 @@
             justify-content: space-between;
             align-items: center;
             background-color: rgba(255, 255, 255, 0.02);
-            padding: 8px 12px;
-            border-radius: 4px;
+            padding: 10px 12px;
+            border-radius: 6px;
             margin-bottom: 8px;
             font-size: 13px;
         }
@@ -222,18 +229,18 @@
             font-size: 10px;
             padding: 2px 6px;
             border-radius: 4px;
-            font-weight: bold;
+            font-weight: 700;
         }
 
-        .badge-now { background-color: rgba(0, 230, 118, 0.15); color: #00e676; }
-        .badge-wait { background-color: rgba(243, 186, 47, 0.15); color: #f3ba2f; }
-        .badge-danger { background-color: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
+        .badge-now { background-color: rgba(0, 230, 118, 0.12); color: #00e676; }
+        .badge-wait { background-color: rgba(243, 186, 47, 0.12); color: #f3ba2f; }
+        .badge-danger { background-color: rgba(255, 107, 107, 0.12); color: #ff6b6b; }
 
         .strip {
-            background-color: rgba(0, 230, 118, 0.03);
-            border: 1px dashed rgba(0, 230, 118, 0.2);
-            padding: 10px;
-            border-radius: 4px;
+            background-color: rgba(0, 230, 118, 0.02);
+            border: 1px dashed rgba(0, 230, 118, 0.15);
+            padding: 12px;
+            border-radius: 6px;
             margin-top: 12px;
             font-size: 12px;
             display: flex;
@@ -253,11 +260,12 @@
             padding: 0 12px 6px 12px;
             border-bottom: 1px solid #222a27;
             margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .fall-text {
             color: #ff6b6b;
-            font-weight: bold;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -284,21 +292,21 @@
             
             <div class="health-indicator">
                 <div class="health-label">FATOR DE SAÚDE</div>
-                <div class="health-value">···</div>
-                <div class="health-status">AGUARDANDO DADOS</div>
+                <div id="main-health" class="health-value">···</div>
+                <div id="main-status" class="health-status">AGUARDANDO DADOS</div>
             </div>
         </div>
 
-        <!-- Bloco de Cartões -->
+        <!-- Bloco de Cartões Dinâmicos -->
         <div class="card">
             <div class="card-header">
                 <span class="card-title">BTC / USDT</span>
                 <span>Mercado</span>
             </div>
-            <div class="loading-line"></div>
+            <div id="btc-price" class="card-value"><div class="skeleton-line"></div></div>
             <div class="card-footer">
                 <span>Mercado conectado</span>
-                <span>🔄</span>
+                <span style="cursor:pointer;" onclick="updateBtcPrice()">🔄</span>
             </div>
         </div>
 
@@ -307,10 +315,10 @@
                 <span class="card-title">Colateral BTCB</span>
                 <span>On-chain</span>
             </div>
-            <div class="loading-line"></div>
+            <div class="card-value">—</div>
             <div class="card-footer">
-                <span>—</span>
-                <span>LT —</span>
+                <span>Endereço monitorado</span>
+                <span style="font-size:9px; color:#556460;">0x49F8...829C</span>
             </div>
         </div>
 
@@ -319,7 +327,7 @@
                 <span class="card-title">Dívida total</span>
                 <span>— mercados</span>
             </div>
-            <div class="loading-line"></div>
+            <div class="card-value">—</div>
             <div class="card-footer">
                 <span>Colateral ponderado</span>
                 <span>—</span>
@@ -335,7 +343,7 @@
             
             <div class="row">
                 <span class="row-desc">Preço atual</span>
-                <strong>—</strong>
+                <strong id="limit-current-price">—</strong>
                 <span class="badge badge-now">AGORA</span>
             </div>
             <div class="row">
@@ -343,18 +351,3 @@
                 <strong>—</strong>
                 <span class="badge badge-wait">ATENÇÃO</span>
             </div>
-            <div class="row">
-                <span class="row-desc">Saúde 1,00 · liquidação</span>
-                <strong>—</strong>
-                <span class="badge badge-danger">CRÍTICO</span>
-            </div>
-
-            <div class="strip">
-                <span>Distância até a liquidação</span>
-                <strong>—</strong>
-            </div>
-        </div>
-
-        <!-- Painel Teste de Estresse -->
-        <div class="panel">
-            <div class="panel-header">
