@@ -1,66 +1,35 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preço do BTC - Binance</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            padding: 20px;
-            border-radius: 10px;
-            background-color: #1e1e1e;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        h1 { color: #F3BA2F; margin-bottom: 10px; } /* Cor oficial da Binance */
-        .preco { font-size: 2.5rem; font-weight: bold; }
-    </style>
-</head>
-<body>
+<script>
+    const priceElement = document.getElementById("btc-price");
 
-    <div class="container">
-        <h1>Bitcoin (BTC / USDT)</h1>
-        <!-- O preço será inserido aqui pelo JavaScript -->
-        <div class="preco" id="btc-price">Carregando...</div>
-    </div>
-
-    <script>
-        // Endpoint do WebSocket da Binance para o par BTC/USDT
-        const wsUrl = "wss://://binance.com";
-        const priceElement = document.getElementById("btc-price");
-
-        // Inicia a conexão com a API da Binance
-        const btcSocket = new WebSocket(wsUrl);
-
-        // Atualiza o HTML sempre que a Binance enviar um preço novo
-        btcSocket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const price = parseFloat(data.c); // 'c' representa o preço de fechamento atual
+    // Função que busca o preço diretamente da API HTTP da Binance
+    async function buscarPrecoBTC() {
+        try {
+            const resposta = await fetch("https://binance.com");
             
-            // Formata o número como moeda americana (US$)
-            priceElement.innerText = price.toLocaleString('en-US', {
+            if (!resposta.ok) throw new Error("Erro na resposta da rede");
+            
+            const dados = await resposta.json();
+            const preco = parseFloat(dados.price);
+
+            // Formata o valor como moeda americana (US$)
+            priceElement.innerText = preco.toLocaleString('en-US', {
                 style: 'currency',
                 currency: 'USD'
             });
-        };
+            
+            // Restaura a cor padrão caso tenha dado erro antes
+            priceElement.style.color = "#ffffff";
 
-        // Trata possíveis erros de conexão (como o erro de fetch da imagem anterior)
-        btcSocket.onerror = (error) => {
-            console.error("Erro na conexão com a Binance:", error);
+        } catch (erro) {
+            console.error("Erro ao buscar dados da Binance:", erro);
             priceElement.innerText = "Erro ao carregar";
             priceElement.style.color = "#ff4a4a";
-        };
-    </script>
+        }
+    }
 
-</body>
-</html>
+    // Executa a função assim que a página abre
+    buscarPrecoBTC();
+
+    // Atualiza o preço automaticamente a cada 5 segundos
+    setInterval(buscarPrecoBTC, 5000);
+</script>
