@@ -2,374 +2,359 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Sentinela Venus · Monitor de Risco</title>
-    <meta name="description" content="Monitor em tempo real de preço, saúde e risco de liquidação de uma posição no Venus Protocol."/>
-    <meta name="theme-color" content="#090c0b"/>
     
     <style>
-        :root {
-            --bg-primary: #090c0b;
-            --bg-secondary: #111614;
-            --text-primary: #ffffff;
-            --text-muted: #8e9a96;
-            --accent-gold: #f3ba2f;
-            --accent-coral: #ff6b6b;
-            --accent-green: #00e676;
-            --border-color: #222a27;
+        /* Reset de segurança para garantir renderização */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            background-color: #090c0b !important;
+            color: #ffffff !important;
+            font-family: sans-serif;
         }
 
-        * {
+        .container {
+            display: block;
+            width: 100%;
+            max-width: 600px; /* Otimizado para visualização mobile */
+            margin: 0 auto;
+            padding: 15px;
             box-sizing: border-box;
         }
 
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 16px;
-        }
-
-        .app-shell {
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        /* Topbar */
-        .topbar {
+        /* Topbar / Cabeçalho */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 16px;
-            margin-bottom: 24px;
+            border-bottom: 1px solid #222a27;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        .brand-lockup {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-mark {
-            color: var(--accent-green);
-            display: flex;
-            align-items: center;
+        .logo-area {
+            display: block;
         }
 
         .eyebrow {
-            font-size: 0.65rem;
-            color: var(--accent-gold);
-            letter-spacing: 1.5px;
-            margin: 0;
+            font-size: 10px;
+            color: #f3ba2f;
+            letter-spacing: 1px;
+            margin: 0 0 4px 0;
             text-transform: uppercase;
         }
 
-        h1 { 
-            font-size: 1.3rem; 
+        .title {
+            font-size: 22px;
+            font-weight: bold;
             margin: 0;
-            font-weight: 700;
         }
 
-        .topbar-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .status-area {
+            text-align: right;
         }
 
-        .live-status {
-            font-size: 0.75rem;
-            color: var(--text-muted);
+        .live-tag {
+            font-size: 11px;
+            color: #8e9a96;
             display: flex;
             align-items: center;
             gap: 6px;
-            white-space: nowrap;
         }
 
-        .live-status span {
-            width: 7px;
-            height: 7px;
-            background-color: var(--accent-green);
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #00e676;
             border-radius: 50%;
             display: inline-block;
         }
 
-        .audio-button {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.75rem;
+        /* Bloco Hero */
+        .hero-box {
+            background-color: #111614;
+            border: 1px solid #222a27;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        /* Hero */
-        .hero-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
-            background: var(--bg-secondary);
-            padding: 24px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .protocol-pill {
+        .pill {
             display: inline-block;
-            background: rgba(243, 186, 47, 0.08);
-            color: var(--accent-gold);
+            background-color: rgba(243, 186, 47, 0.1);
+            color: #f3ba2f;
             padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            margin-bottom: 12px;
-            font-weight: 500;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-bottom: 10px;
         }
 
-        .hero-copy h2 {
-            font-size: 1.6rem;
-            font-weight: 700;
-            line-height: 1.25;
-            margin: 0 0 12px 0;
+        .hero-title {
+            font-size: 20px;
+            margin: 0 0 10px 0;
+            line-height: 1.3;
         }
 
-        .hero-copy em {
-            color: var(--accent-coral);
-            font-style: normal;
+        .hero-title span {
+            color: #ff6b6b;
         }
 
-        .hero-copy p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin: 0;
+        .hero-desc {
+            font-size: 13px;
+            color: #8e9a96;
+            margin: 0 0 15px 0;
             line-height: 1.4;
         }
 
-        .health-orbit {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-left: 1px solid var(--border-color);
-            padding-left: 24px;
-        }
-
-        .health-center {
+        .health-indicator {
+            border-top: 1px solid #222a27;
+            padding-top: 15px;
             text-align: center;
         }
 
-        .health-center span {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            display: block;
+        .health-label {
+            font-size: 11px;
+            color: #8e9a96;
             letter-spacing: 0.5px;
         }
 
-        .health-center strong {
-            font-size: 2.2rem;
-            display: block;
-            margin: 4px 0;
-            letter-spacing: 1px;
+        .health-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 5px 0;
         }
 
-        .health-center small {
-            font-size: 0.65rem;
-            color: var(--accent-gold);
-            display: block;
+        .health-status {
+            font-size: 11px;
+            color: #f3ba2f;
         }
 
-        /* Grid de Métricas */
-        .metric-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .metric-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+        /* Cartões de Métricas */
+        .card {
+            background-color: #111614;
+            border: 1px solid #222a27;
             border-radius: 8px;
-            padding: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card-header {
             display: flex;
-            flex-direction: column;
             justify-content: space-between;
+            font-size: 12px;
+            color: #8e9a96;
         }
 
-        .card-heading {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
+        .card-title {
+            color: #ffffff;
+            font-weight: bold;
         }
 
-        .card-heading span:not(.icon-box) {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        .card-heading small {
-            margin-left: auto;
-            font-size: 0.75rem;
-        }
-
-        .icon-box {
-            display: flex;
-            align-items: center;
-            color: var(--text-muted);
-        }
-        .icon-box.gold { color: var(--accent-gold); }
-        .icon-box.coral { color: var(--accent-coral); }
-
-        .metric-value {
-            margin: 16px 0;
-        }
-
-        .skeleton-line {
-            height: 28px;
+        /* Animação do esqueleto de carregamento */
+        .loading-line {
+            height: 24px;
             background: linear-gradient(90deg, #161d1a 25%, #222a27 50%, #161d1a 75%);
             background-size: 200% 100%;
-            animation: loading 1.5s infinite;
+            animation: loading-animation 1.5s infinite;
             border-radius: 4px;
-            width: 60%;
+            margin: 15px 0;
+            width: 50%;
         }
 
-        @keyframes loading {
+        @keyframes loading-animation {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
 
-        .metric-foot {
+        .card-footer {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            border-top: 1px solid rgba(255,255,255,0.03);
-            padding-top: 12px;
+            font-size: 11px;
+            color: #8e9a96;
         }
 
-        .metric-foot button {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            padding: 0;
-        }
-
-        /* Dashboard Planels */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
+        /* Painéis de Decisão e Estresse */
         .panel {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            background-color: #111614;
+            border: 1px solid #222a27;
             border-radius: 8px;
-            padding: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .panel-header {
+            margin-bottom: 15px;
+        }
+
+        .panel-subtitle {
+            font-size: 10px;
+            color: #8e9a96;
+            margin: 0 0 2px 0;
+            letter-spacing: 0.5px;
         }
 
         .panel-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            color: var(--text-muted);
-        }
-
-        .panel-title p {
+            font-size: 15px;
             margin: 0;
-            font-size: 0.65rem;
-            letter-spacing: 1px;
+            font-weight: bold;
         }
 
-        .panel-title h3 {
-            font-size: 1.1rem;
-            margin: 4px 0 0 0;
-            color: var(--text-primary);
-        }
-
-        /* Listas internas */
-        .threshold-list, .simulation-list {
+        .row {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .threshold-row, .simulation-row {
-            display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 10px 12px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.02);
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.02);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
         }
 
-        .threshold-row small {
-            display: block;
-            color: var(--text-muted);
-            font-size: 0.75rem;
+        .row-desc {
+            color: #8e9a96;
         }
 
-        .threshold-row strong, .simulation-row strong {
-            font-size: 0.9rem;
-        }
-
-        .tag {
-            font-size: 0.65rem;
+        .badge {
+            font-size: 10px;
             padding: 2px 6px;
             border-radius: 4px;
-            font-weight: 700;
+            font-weight: bold;
         }
 
-        .safe-tag { background: rgba(0, 230, 118, 0.1); color: var(--accent-green); }
-        .warning-tag { background: rgba(243, 186, 47, 0.1); color: var(--accent-gold); }
-        .danger-tag { background: rgba(255, 107, 107, 0.1); color: var(--accent-coral); }
+        .badge-now { background-color: rgba(0, 230, 118, 0.15); color: #00e676; }
+        .badge-wait { background-color: rgba(243, 186, 47, 0.15); color: #f3ba2f; }
+        .badge-danger { background-color: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
 
-        .distance-strip {
-            margin-top: 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(0, 230, 118, 0.03);
-            padding: 10px 12px;
-            border-radius: 6px;
-            border: 1px dashed rgba(0, 230, 118, 0.15);
-            color: var(--text-muted);
-        }
-
-        .distance-strip small {
-            display: block;
-            font-size: 0.7rem;
-        }
-
-        .distance-strip strong {
-            color: var(--text-primary);
-            font-size: 0.9rem;
-        }
-
-        /* Simulação */
-        .simulation-head {
+        .strip {
+            background-color: rgba(0, 230, 118, 0.03);
+            border: 1px dashed rgba(0, 230, 118, 0.2);
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 12px;
+            font-size: 12px;
             display: flex;
             justify-content: space-between;
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            padding: 0 12px 8px 12px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 8px;
-            font-weight: 600;
+            color: #8e9a96;
         }
 
-        .simulation-head span:nth-child(2) {
+        .strip strong {
+            color: #ffffff;
+        }
+
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #8e9a96;
+            padding: 0 12px 6px 12px;
+            border-bottom: 1px solid #222a27;
+            margin-bottom: 8px;
+        }
+
+        .fall-text {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Cabeçalho -->
+        <div class="header">
+            <div class="logo-area">
+                <p class="eyebrow">Venus Risk Terminal</p>
+                <div class="title">Sentinela</div>
+            </div>
+            <div class="status-area">
+                <div class="live-tag"><span class="live-dot"></span> AO VIVO · 15S</div>
+            </div>
+        </div>
+
+        <!-- Painel Hero -->
+        <div class="hero-box">
+            <div class="pill">Core Pool · BNB Chain</div>
+            <div class="hero-title">Risco sob controle.<br/><span>Antes do mercado virar.</span></div>
+            <div class="hero-desc">Acompanhe a margem de segurança da posição, simule quedas do BTC e receba um alerta quando a saúde entrar na zona crítica.</div>
+            
+            <div class="health-indicator">
+                <div class="health-label">FATOR DE SAÚDE</div>
+                <div class="health-value">···</div>
+                <div class="health-status">AGUARDANDO DADOS</div>
+            </div>
+        </div>
+
+        <!-- Bloco de Cartões -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">BTC / USDT</span>
+                <span>Mercado</span>
+            </div>
+            <div class="loading-line"></div>
+            <div class="card-footer">
+                <span>Mercado conectado</span>
+                <span>🔄</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Colateral BTCB</span>
+                <span>On-chain</span>
+            </div>
+            <div class="loading-line"></div>
+            <div class="card-footer">
+                <span>—</span>
+                <span>LT —</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Dívida total</span>
+                <span>— mercados</span>
+            </div>
+            <div class="loading-line"></div>
+            <div class="card-footer">
+                <span>Colateral ponderado</span>
+                <span>—</span>
+            </div>
+        </div>
+
+        <!-- Painel Limites de Segurança -->
+        <div class="panel">
+            <div class="panel-header">
+                <p class="panel-subtitle">LIMITES DE SEGURANÇA</p>
+                <div class="panel-title">Pontos de decisão</div>
+            </div>
+            
+            <div class="row">
+                <span class="row-desc">Preço atual</span>
+                <strong>—</strong>
+                <span class="badge badge-now">AGORA</span>
+            </div>
+            <div class="row">
+                <span class="row-desc">Saúde 1,40 · zona de atenção</span>
+                <strong>—</strong>
+                <span class="badge badge-wait">ATENÇÃO</span>
+            </div>
+            <div class="row">
+                <span class="row-desc">Saúde 1,00 · liquidação</span>
+                <strong>—</strong>
+                <span class="badge badge-danger">CRÍTICO</span>
+            </div>
+
+            <div class="strip">
+                <span>Distância até a liquidação</span>
+                <strong>—</strong>
+            </div>
+        </div>
+
+        <!-- Painel Teste de Estresse -->
+        <div class="panel">
+            <div class="panel-header">
