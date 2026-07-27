@@ -3,58 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Monitoramento - BTC</title>
+    <title>Painel BTC</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
             background-color: #000000;
             color: #ffffff;
-            min-height: 100vh;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
         }
 
-        /* CONTAINER DOS DOIS BLOCOS */
         .dashboard-container {
-            display: flex;
-            flex-direction: column; 
-            gap: 20px;           
             width: 100%;
-            max-width: 420px;    
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        /* CARDS INDEPENDENTES */
         .card {
             width: 100%;
             padding: 24px;
             border-radius: 16px;
         }
 
-        /* BLOCO 1: Limites de Segurança */
+        /* CARD 1 */
         .card-safety {
             background-color: #0b110a;
             border: 1px solid #1c271a;
         }
 
-        /* BLOCO 2: Limites Dinâmicos */
+        /* CARD 2 */
         .card-risk {
             background-color: #0d0f12;
             border: 1px solid #1c2024;
         }
 
-        /* CABEÇALHOS */
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
             margin-bottom: 24px;
         }
 
@@ -72,26 +66,9 @@
         .header-subtitle {
             font-size: 22px;
             font-weight: 600;
-            color: #ffffff;
         }
 
-        /* ÍCONES */
-        .icon-gauge {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #555;
-            border-radius: 50%;
-            border-top-color: transparent;
-            transform: rotate(45deg);
-            opacity: 0.7;
-        }
-
-        .icon-lightbulb {
-            color: #5c6773;
-            display: flex;
-        }
-
-        /* TIMELINE DO BLOCO 1 */
+        /* TIMELINE CARD 1 */
         .timeline {
             position: relative;
             padding-left: 32px;
@@ -105,7 +82,7 @@
             top: 10px;
             bottom: 10px;
             width: 2px;
-            background: linear-gradient(to bottom, #99ff33 0%, #ffcc00 50%, #ff3333 100%);
+            background: linear-gradient(to bottom, #99ff33, #ffcc00, #ff3333);
         }
 
         .timeline-item {
@@ -125,37 +102,21 @@
             height: 12px;
             border-radius: 50%;
             background-color: #0b110a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .dot::after {
-            content: '';
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-
-        .item-now .dot { border: 2px solid #99ff33; }
-        .item-now .dot::after { background-color: #99ff33; }
-        
-        .item-warning .dot { border: 2px solid #ffcc00; }
-        .item-warning .dot::after { background-color: #ffcc00; }
-
-        .item-critical .dot { border: 2px solid #ff3355; }
-        .item-critical .dot::after { background-color: #ff3355; }
+        .item-now .dot { border: 2px solid #99ff33; background: #99ff33; }
+        .item-warning .dot { border: 2px solid #ffcc00; background: #ffcc00; }
+        .item-critical .dot { border: 2px solid #ff3355; background: #ff3355; }
 
         .info-block { display: flex; flex-direction: column; }
         .label { color: #667061; font-size: 13px; margin-bottom: 4px; }
-        .price { font-size: 24px; font-weight: 700; color: #ffffff; }
+        .price { font-size: 24px; font-weight: 700; }
 
         .status-badge {
             font-size: 10px;
             font-weight: 700;
             padding: 4px 8px;
             border-radius: 4px;
-            letter-spacing: 0.5px;
         }
 
         .badge-now { background-color: #172412; color: #99ff33; }
@@ -172,12 +133,10 @@
             gap: 16px;
         }
 
-        .icon-shield { color: #99ff33; display: flex; }
-        .footer-text { display: flex; flex-direction: column; }
         .footer-label { color: #667061; font-size: 12px; margin-bottom: 4px; }
         .footer-value { color: #99ff33; font-size: 18px; font-weight: 700; }
 
-        /* LISTA DE RISCOS DO BLOCO 2 */
+        /* LISTA CARD 2 */
         .risk-list {
             display: flex;
             flex-direction: column;
@@ -191,8 +150,7 @@
             border-bottom: 1px solid #1c2024;
         }
 
-        .risk-item:first-child { padding-top: 10px; }
-        .risk-item:last-child { border-bottom: none; padding-bottom: 10px; }
+        .risk-item:last-child { border-bottom: none; }
 
         .risk-left {
             display: flex;
@@ -210,11 +168,11 @@
         .bar-liquidation { background-color: #ff3355; }
 
         .risk-title-block { display: flex; flex-direction: column; }
-        .risk-name { font-size: 16px; font-weight: 600; color: #ffffff; margin-bottom: 2px; }
+        .risk-name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
         .risk-sub { color: #5c6773; font-size: 12px; }
 
         .risk-right { text-align: right; display: flex; flex-direction: column; }
-        .risk-price { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 2px; }
+        .risk-price { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
         .risk-pct { color: #5c6773; font-size: 12px; }
     </style>
 </head>
@@ -222,14 +180,13 @@
 
     <div class="dashboard-container">
 
-        <!-- BLOCO 1: LIMITES DE SEGURANÇA -->
+        <!-- BLOCO 1 -->
         <div class="card card-safety">
             <div class="header">
                 <div>
                     <div class="header-title">Limites de Segurança</div>
                     <div class="header-subtitle">Pontos de decisão</div>
                 </div>
-                <div class="icon-gauge"></div>
             </div>
 
             <div class="timeline">
@@ -262,38 +219,68 @@
             </div>
 
             <div class="footer-box">
-                <div class="icon-shield">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        <polyline points="9 11 11 13 15 9"></polyline>
-                    </svg>
-                </div>
-                <div class="footer-text">
+                <div class="info-block">
                     <span class="footer-label">Distância até a liquidação</span>
                     <span class="footer-value">35.8% de queda</span>
                 </div>
             </div>
         </div>
 
-        <!-- BLOCO 2: LIMITES DINÂMICOS CORRIGIDOS -->
+        <!-- BLOCO 2 -->
         <div class="card card-risk">
             <div class="header">
                 <div>
                     <div class="header-title">Limites Dinâmicos</div>
                     <div class="header-subtitle">Pontos de risco do BTC</div>
                 </div>
-                <div class="icon-lightbulb">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
-                        <line x1="9" y1="18" x2="15" y2="18"></line>
-                        <line x1="10" y1="22" x2="14" y2="22"></line>
-                    </svg>
-                </div>
             </div>
 
-            <!-- ESSA ERA A LISTA QUE ESTAVA FALTANDO DENTRO DO SEU CODIGO -->
             <div class="risk-list">
-                <!-- Linha 1 -->
                 <div class="risk-item">
                     <div class="risk-left">
                         <div class="risk-bar bar-warning"></div>
+                        <div class="risk-title-block">
+                            <span class="risk-name">Aviso</span>
+                            <span class="risk-sub">Saúde 1.40</span>
+                        </div>
+                    </div>
+                    <div class="risk-right">
+                        <span class="risk-price">US$ 58.402,62</span>
+                        <span class="risk-pct">-10.1% do preço atual</span>
+                    </div>
+                </div>
+
+                <div class="risk-item">
+                    <div class="risk-left">
+                        <div class="risk-bar bar-high"></div>
+                        <div class="risk-title-block">
+                            <span class="risk-name">Risco alto</span>
+                            <span class="risk-sub">Saúde 1.20</span>
+                        </div>
+                    </div>
+                    <div class="risk-right">
+                        <span class="risk-price">US$ 50.058,46</span>
+                        <span class="risk-pct">-22.9% do preço atual</span>
+                    </div>
+                </div>
+
+                <div class="risk-item">
+                    <div class="risk-left">
+                        <div class="risk-bar bar-liquidation"></div>
+                        <div class="risk-title-block">
+                            <span class="risk-name">Liquidação</span>
+                            <span class="risk-sub">Saúde 1.00</span>
+                        </div>
+                    </div>
+                    <div class="risk-right">
+                        <span class="risk-price">US$ 41.714,30</span>
+                        <span class="risk-pct">-35.8% do preço atual</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
