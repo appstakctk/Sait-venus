@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Risco e Projeções - Venus</title>
-    <!-- Correção 1: Inclusão da biblioteca oficial Ethers.js v6 via CDN -->
+    <title>Calculadora de Risco e Projeções - Venus Web3</title>
+    
+    <!-- CDN OFICIAL DO ETHERS.JS V6 -->
     <script src="https://cloudflare.com"></script>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -141,15 +143,27 @@
 </div>
 
 <script>
-// Fator de colateral padrão histórico do vBTC na Venus Core Pool (~80%)
+// Configurações Globais do Ecossistema Venus Protocol na BNB Chain (Core Pool)
 const COLLATERAL_FACTOR = 0.80; 
+const VENUS_COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384"; // Core Pool Comptroller
+const VBTC_CONTRACT_ADDRESS = "0x882c173bc7ff3b7786ca16dfed3dfffb9ee7847b"; // Endereço do vBTC
+const BSC_RPC_URL = "https://binance.org"; // RPC Pública estável da BSC
+
+// ABIs Human-Readable para Ethers v6 interagir sem carregar JSONs gigantes
+const vTokenAbi = [
+    "function balanceOf(address owner) view returns (uint256)",
+    "function exchangeRateStored() view returns (uint256)"
+];
+
+const comptrollerAbi = [
+    "function getAccountLiquidity(address account) view returns (uint256 error, uint256 liquidity, uint256 shortfall)"
+];
 
 function parseInputField(id) {
     const value = document.getElementById(id).value.toString();
     return parseFloat(value.replace(',', '.')) || 0;
 }
 
-// Correção 2: Implementação completa da função de cálculo matemático local
 function calcular() {
     const btcPrice = parseInputField('btcPrice');
     const btcBalance = parseInputField('btcBalance');
@@ -168,7 +182,6 @@ function calcular() {
     const resultBox = document.getElementById('result');
     const liqPriceBox = document.getElementById('liquidationPrice');
 
-    // Atualiza interface do Fator de Saúde
     if (healthFactor === 0) {
         resultBox.innerText = "Fator de Saúde Atual: N/A";
         resultBox.className = "result-box moderate";
@@ -188,7 +201,6 @@ function calcular() {
         }
     }
 
-    // Calcula Preço de Liquidação (Onde Fator de saúde se torna igual a 1.0)
     if (btcBalance > 0 && borrow > 0) {
         const liqPrice = borrow / (btcBalance * COLLATERAL_FACTOR);
         liqPriceBox.innerText = `Preço limite de liquidação: US$ ${liqPrice.toFixed(2)}`;
@@ -196,7 +208,6 @@ function calcular() {
         liqPriceBox.innerText = "Preço limite de liquidação: US$ --";
     }
 
-    // Gera tabela dinâmica de projeções de queda do mercado
     const tableBody = document.getElementById('projectionTable');
     tableBody.innerHTML = "";
 
@@ -224,43 +235,34 @@ function calcular() {
     });
 }
 
-// Correção 3: Correção da função de sincronização assíncrona Web3 via RPC
+// INTEGRAÇÃO WEB3 REAL USANDO ETHERS.JS V6
 async function sincronizarDados() {
     const wallet = document.getElementById('walletAddress').value.trim();
     const syncBtn = document.getElementById('syncBtn');
     const statusMsg = document.getElementById('statusMsg');
 
-    if (!wallet.startsWith("0x") || wallet.length !== 42) {
-        statusMsg.innerText = "Erro: Endereço de carteira inválido.";
+    if (!ethers.isAddress(wallet)) {
+        statusMsg.innerText = "Erro: Endereço de carteira BSC inválido.";
         statusMsg.style.color = "#f85149";
         return;
     }
 
-    syncBtn.disabled = true;
-    statusMsg.innerText = "Conectando à BNB Chain e buscando dados reais...";
-    statusMsg.style.color = "#58a6ff";
-
     try {
-        // Busca preço do BTC via API oficial e aberta da Binance Crypto
-        try {
-            const priceResponse = await fetch("https://binance.com");
-            const priceData = await priceResponse.json();
-            if (priceData && priceData.price) {
-                document.getElementById('btcPrice').value = parseFloat(priceData.price).toFixed(2);
-            }
-        } catch (e) {
-            console.log("Falha ao buscar preço via API, usando valor local.");
-        }
+        syncBtn.disabled = true;
+        statusMsg.style.color = "#58a6ff";
+        statusMsg.innerText = "Conectando à Rede Blockchain (BSC Node)...";
 
-        // Endpoint de nó RPC público e estável para a BNB Chain (Ankr)
-        const provider = new ethers.JsonRpcProvider("https://ankr.com");
+        // 1. Inicializa o provedor JSON-RPC para a BNB Chain
+        const provider = new ethers.JsonRpcProvider(BSC_RPC_URL);
 
-        // ABIs Mínimos corrigidos para compatibilidade com Ethers v6
-        const comptrollerAbi = ["function github_is_not_abi()", "function accountAssets(address, uint256) view returns (address)"];
-        const vTokenAbi = [
-            "function balanceOf(address) view returns (uint256)",
-            "function borrowBalanceStored(address) view returns (uint256)",
-            "function exchangeRateStored() view returns (uint256)"
-        ];
+        statusMsg.innerText = "Buscando dados no protocolo Venus...";
 
-        // Endereços de contratos oficiais atualizados da Venus Protocol no ecossistema BSC
+        // 2. Instancia os Smart Contracts
+        const vBtcContract = new ethers.Contract(VBTC_CONTRACT_ADDRESS, vTokenAbi, provider);
+        const comptrollerContract = new ethers.Contract(VENUS_COMPTROLLER_ADDRESS, comptrollerAbi, provider);
+
+        // 3. Executa as chamadas em paralelo para otimizar velocidade
+        const [vBtcBalance, exchangeRate, liquidityData, btcPriceRaw] = await Promise.all([
+            vBtcContract.balanceOf(wallet),
+            vBtcContract.exchangeRateStored(),
+            comptrollerContract.getAccountLiquidity(wallet),
