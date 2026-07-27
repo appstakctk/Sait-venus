@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Risco e Projeções - Venus</title>
+    <!-- Correção 1: Inclusão da biblioteca oficial Ethers.js v6 via CDN -->
+    <script src="https://cloudflare.com"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #161b22;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        h2, h3 { text-align: center; color: #58a6ff; margin-top: 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            background-color: #0d1117;
+            color: #f0f6fc;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #238636;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #2ea043; }
+        button:disabled { background-color: #21262d; color: #8b949e; cursor: not-allowed; }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .super-safe { background-color: #238636; color: white; }
+        .safe { background-color: #1f6feb; color: white; }
+        .moderate { background-color: #d29922; color: black; }
+        .danger { background-color: #f85149; color: white; }
+        .info { font-size: 14px; color: #8b949e; margin-top: 10px; text-align: center; font-weight: bold; }
+        .status-msg { font-size: 12px; color: #58a6ff; text-align: center; margin-top: -10px; margin-bottom: 15px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #30363d;
+        }
+        th { background-color: #21262d; color: #58a6ff; }
+        tr:hover { background-color: #21262d; }
+        .text-danger { color: #f85149; font-weight: bold; }
+        .text-warning { color: #d29922; font-weight: bold; }
+        .text-safe { color: #58a6ff; font-weight: bold; }
+        .text-super-safe { color: #3fb950; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Simulador Dinâmico Venus</h2>
+    
+    <div class="input-group">
+        <label>Endereço da Carteira BSC:</label>
+        <input type="text" id="walletAddress" value="0x49F8739791713858A6718564f035f8c35905829C">
+    </div>
+
+    <button id="syncBtn" onclick="sincronizarDados()">Sincronizar Dados via Blockchain</button>
+    <div id="statusMsg" class="status-msg">Pronto para sincronizar.</div>
+
+    <div class="input-group">
+        <label>Preço Atual do BTC no Mercado (US$):</label>
+        <input type="text" id="btcPrice" value="60000" oninput="calcular()">
+    </div>
+
+    <div class="input-group">
+        <label>Seu Saldo BTCB (Colateral):</label>
+        <input type="text" id="btcBalance" value="0.010918" oninput="calcular()">
+    </div>
+
+    <div class="input-group">
+        <label>Sua Dívida Total (US$):</label>
+        <input type="text" id="borrow" value="393.07" oninput="calcular()">
+    </div>
+
+    <div id="result" class="result-box moderate">
+        Fator de Saúde Atual: --
+    </div>
+    
+    <div id="liquidationPrice" class="info">
+        Preço limite de liquidação: US$ --
+    </div>
+</div>
+
+<div class="container">
+    <h3>Projeções Automáticas de Queda</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Queda</th>
+                <th>Preço BTC</th>
+                <th>Seu Colateral</th>
+                <th>Fator Saúde</th>
+            </tr>
+        </thead>
+        <tbody id="projectionTable">
+        </tbody>
+    </table>
+</div>
+
+<script>
+// Fator de colateral padrão histórico do vBTC na Venus Core Pool (~80%)
+const COLLATERAL_FACTOR = 0.80; 
+
+function parseInputField(id) {
+    const value = document.getElementById(id).value.toString();
+    return parseFloat(value.replace(',', '.')) || 0;
+}
+
+// Correção 2: Implementação completa da função de cálculo matemático local
+function calcular() {
+    const btcPrice = parseInputField('btcPrice');
+    const btcBalance = parseInputField('btcBalance');
+    const borrow = parseInputField('borrow');
+
+    const totalCollateralValue = btcBalance * btcPrice;
+    const borrowLimit = totalCollateralValue * COLLATERAL_FACTOR;
+
+    let healthFactor = 0;
+    if (borrow > 0) {
+        healthFactor = borrowLimit / borrow;
+    } else {
+        healthFactor = btcBalance > 0 ? 999 : 0;
+    }
+
+    const resultBox = document.getElementById('result');
+    const liqPriceBox = document.getElementById('liquidationPrice');
+
+    // Atualiza interface do Fator de Saúde
+    if (healthFactor === 0) {
+        resultBox.innerText = "Fator de Saúde Atual: N/A";
+        resultBox.className = "result-box moderate";
+    } else if (healthFactor >= 999) {
+        resultBox.innerText = "Fator de Saúde: Sem Dívidas (Seguro)";
+        resultBox.className = "result-box super-safe";
+    } else {
+        resultBox.innerText = `Fator de Saúde Atual: ${healthFactor.toFixed(2)}`;
+        if (healthFactor > 1.5) {
+            resultBox.className = "result-box super-safe";
+        } else if (healthFactor > 1.1) {
+            resultBox.className = "result-box safe";
+        } else if (healthFactor > 1.0) {
+            resultBox.className = "result-box moderate";
+        } else {
+            resultBox.className = "result-box danger";
+        }
+    }
+
+    // Calcula Preço de Liquidação (Onde Fator de saúde se torna igual a 1.0)
+    if (btcBalance > 0 && borrow > 0) {
+        const liqPrice = borrow / (btcBalance * COLLATERAL_FACTOR);
+        liqPriceBox.innerText = `Preço limite de liquidação: US$ ${liqPrice.toFixed(2)}`;
+    } else {
+        liqPriceBox.innerText = "Preço limite de liquidação: US$ --";
+    }
+
+    // Gera tabela dinâmica de projeções de queda do mercado
+    const tableBody = document.getElementById('projectionTable');
+    tableBody.innerHTML = "";
+
+    const quedas =;
+    quedas.forEach(queda => {
+        const projPrice = btcPrice * (1 - queda / 100);
+        const projCollateralValue = btcBalance * projPrice;
+        const projBorrowLimit = projCollateralValue * COLLATERAL_FACTOR;
+        const projHealth = borrow > 0 ? (projBorrowLimit / borrow) : 999;
+
+        let healthClass = "text-danger";
+        if (projHealth > 1.5) healthClass = "text-super-safe";
+        else if (projHealth > 1.1) healthClass = "text-safe";
+        else if (projHealth > 1.0) healthClass = "text-warning";
+
+        const textHealth = projHealth >= 999 ? "Seguro" : projHealth.toFixed(2);
+
+        const row = `<tr>
+            <td>${queda}%</td>
+            <td>US$ ${projPrice.toFixed(2)}</td>
+            <td>US$ ${projCollateralValue.toFixed(2)}</td>
+            <td class="${healthClass}">${textHealth}</td>
+        </tr>`;
+        tableBody.innerHTML += row;
+    });
+}
+
+// Correção 3: Correção da função de sincronização assíncrona Web3 via RPC
+async function sincronizarDados() {
+    const wallet = document.getElementById('walletAddress').value.trim();
+    const syncBtn = document.getElementById('syncBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    if (!wallet.startsWith("0x") || wallet.length !== 42) {
+        statusMsg.innerText = "Erro: Endereço de carteira inválido.";
+        statusMsg.style.color = "#f85149";
+        return;
+    }
+
+    syncBtn.disabled = true;
+    statusMsg.innerText = "Conectando à BNB Chain e buscando dados reais...";
+    statusMsg.style.color = "#58a6ff";
+
+    try {
+        // Busca preço do BTC via API oficial e aberta da Binance Crypto
+        try {
+            const priceResponse = await fetch("https://binance.com");
+            const priceData = await priceResponse.json();
+            if (priceData && priceData.price) {
+                document.getElementById('btcPrice').value = parseFloat(priceData.price).toFixed(2);
+            }
+        } catch (e) {
+            console.log("Falha ao buscar preço via API, usando valor local.");
+        }
+
+        // Endpoint de nó RPC público e estável para a BNB Chain (Ankr)
+        const provider = new ethers.JsonRpcProvider("https://ankr.com");
+
+        // ABIs Mínimos corrigidos para compatibilidade com Ethers v6
+        const comptrollerAbi = ["function github_is_not_abi()", "function accountAssets(address, uint256) view returns (address)"];
+        const vTokenAbi = [
+            "function balanceOf(address) view returns (uint256)",
+            "function borrowBalanceStored(address) view returns (uint256)",
+            "function exchangeRateStored() view returns (uint256)"
+        ];
+
+        // Endereços de contratos oficiais atualizados da Venus Protocol no ecossistema BSC
