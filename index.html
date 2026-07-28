@@ -3,266 +3,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Risco e Projeções - Venus Web3</title>
-    
-    <!-- CDN OFICIAL DO ETHERS.JS V6 -->
-    <script src="https://cloudflare.com"></script>
-    
+    <title>Monitor Venus Protocol</title>
     <style>
+        html, body {
+            transition: background-color 0.3s ease;
+        }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #0d1117;
-            color: #c9d1d9;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: #0c0d14;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 16px;
+        }
+        .alerta-visual-ativo {
+            animation: piscarVermelho 1s infinite alternate;
+        }
+        .flash-crash-ativo {
+            animation: piscarRoxo 0.5s infinite alternate !important;
+        }
+        @keyframes piscarVermelho {
+            0% { background-color: #0c0d14; }
+            100% { background-color: #3a0d13; }
+        }
+        @keyframes piscarRoxo {
+            0% { background-color: #0c0d14; }
+            100% { background-color: #2e0854; }
         }
         .container {
-            background-color: #161b22;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            max-width: 500px;
-            width: 100%;
-            margin-bottom: 20px;
+            max-width: 480px;
+            margin: 0 auto;
         }
-        h2, h3 { text-align: center; color: #58a6ff; margin-top: 0; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #30363d;
-            border-radius: 5px;
-            background-color: #0d1117;
-            color: #f0f6fc;
-            box-sizing: border-box;
-            font-size: 16px;
+        .card {
+            background-color: #161926;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #23283d;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #238636;
-            color: white;
-            border: none;
-            border-radius: 5px;
+        h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: #858da6;
+            font-weight: 500;
+        }
+        .live-price {
+            font-size: 1.8rem;
             font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
+            color: #10b981;
             margin-top: 5px;
-            margin-bottom: 15px;
-            transition: background 0.2s;
         }
-        button:hover { background-color: #2ea043; }
-        button:disabled { background-color: #21262d; color: #8b949e; cursor: not-allowed; }
-        .result-box {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
+        .var-30min {
+            font-size: 0.9rem;
+            margin-top: 4px;
+            color: #858da6;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #1f2438;
+            padding-bottom: 8px;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .label { color: #858da6; }
+        .data { 
+            font-weight: 500; 
+            white-space: nowrap;
+        }
+        .wallet-text {
+            font-size: 0.75rem;
+            color: #f59e0b;
+            word-break: break-all;
             text-align: center;
-            font-size: 18px;
-            font-weight: bold;
+            margin-top: 10px;
         }
-        .super-safe { background-color: #238636; color: white; }
-        .safe { background-color: #1f6feb; color: white; }
-        .moderate { background-color: #d29922; color: black; }
-        .danger { background-color: #f85149; color: white; }
-        .info { font-size: 14px; color: #8b949e; margin-top: 10px; text-align: center; font-weight: bold; }
-        .status-msg { font-size: 12px; color: #58a6ff; text-align: center; margin-top: -10px; margin-bottom: 15px; }
-        table {
+        .sync-text {
+            font-size: 0.8rem;
+            color: #5d657b;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .btn-audio {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 13px;
+            background-color: #23283d;
+            color: #fff;
+            border: 1px solid #3b4260;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.2s;
         }
-        th, td {
-            padding: 8px;
-            text-align: center;
-            border-bottom: 1px solid #30363d;
+        .btn-audio:hover {
+            background-color: #2e3552;
         }
-        th { background-color: #21262d; color: #58a6ff; }
-        tr:hover { background-color: #21262d; }
-        .text-danger { color: #f85149; font-weight: bold; }
-        .text-warning { color: #d29922; font-weight: bold; }
-        .text-safe { color: #58a6ff; font-weight: bold; }
-        .text-super-safe { color: #3fb950; font-weight: bold; }
+        .danger-text {
+            color: #ef4444 !important;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Simulador Dinâmico Venus</h2>
-    
-    <div class="input-group">
-        <label>Endereço da Carteira BSC:</label>
-        <input type="text" id="walletAddress" value="0x49F8739791713858A6718564f035f8c35905829C">
+    <button class="btn-audio" id="btn-som" onclick="ativarAudio()">Ativar Alertas Sonoros</button>
+    <div class="sync-text" id="status-sync">Aguardando ativação...</div>
+
+    <div class="card">
+        <h2>Preço do BTC em Tempo Real</h2>
+        <div class="live-price" id="btc-online">Carregando...</div>
+        <div class="var-30min" id="btc-var-30m">Variação (30m): Calculando histórico...</div>
     </div>
 
-    <button id="syncBtn" onclick="sincronizarDados()">Sincronizar Dados via Blockchain</button>
-    <div id="statusMsg" class="status-msg">Pronto para sincronizar.</div>
-
-    <div class="input-group">
-        <label>Preço Atual do BTC no Mercado (US$):</label>
-        <input type="text" id="btcPrice" value="60000" oninput="calcular()">
+    <div class="card">
+        <h2>Dados da sua Posição (On-Chain)</h2>
+        <div class="info-row">
+            <span class="label">Colateral Fornecido:</span>
+            <span class="data" id="txt-colateral">Carregando...</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Valor Emprestado:</span>
+            <span class="data" id="txt-emprestado">Carregando...</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Limite de Alavancagem Médio:</span>
+            <span class="data">~80% (Core Pool)</span>
+        </div>
     </div>
 
-    <div class="input-group">
-        <label>Seu Saldo BTCB (Colateral):</label>
-        <input type="text" id="btcBalance" value="0.010918" oninput="calcular()">
+    <div class="card">
+        <h2>Pontos de Risco e Saúde</h2>
+        <div class="info-row">
+            <span class="label">Fator de Saúde Atual:</span>
+            <span class="data" style="color: #10b981; font-weight: bold;" id="hf-dinamico">---</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Alvo para Saúde 1.40 (Aviso):</span>
+            <span class="data" style="color: #f59e0b; font-weight: bold;" id="alvo-140">Calculando...</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Alvo para Saúde 1.20 (Risco Alto):</span>
+            <span class="data" style="color: #f97316; font-weight: bold;" id="alvo-120">Calculando...</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Liquidação (Saúde 1.0):</span>
+            <span class="data" style="color: #ef4444; font-weight: bold;" id="alvo-100">Calculando...</span>
+        </div>
     </div>
 
-    <div class="input-group">
-        <label>Sua Dívida Total (US$):</label>
-        <input type="text" id="borrow" value="393.07" oninput="calcular()">
+    <div class="card">
+        <h2>Simulação de Queda do BTC</h2>
+        <div id="simulacao-quedas">
+            <div class="info-row"><span class="label">Aguardando dados do mercado...</span></div>
+        </div>
     </div>
 
-    <div id="result" class="result-box moderate">
-        Fator de Saúde Atual: --
+    <div class="wallet-text">
+        Monitorando via API Venus:<br>
+        <span style="font-family: monospace;">0x49F8739791713858A6718564f035f8c35905829C</span>
     </div>
-    
-    <div id="liquidationPrice" class="info">
-        Preço limite de liquidação: US$ --
-    </div>
-</div>
-
-<div class="container">
-    <h3>Projeções Automáticas de Queda</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Queda</th>
-                <th>Preço BTC</th>
-                <th>Seu Colateral</th>
-                <th>Fator Saúde</th>
-            </tr>
-        </thead>
-        <tbody id="projectionTable">
-        </tbody>
-    </table>
 </div>
 
 <script>
-// Configurações Globais do Ecossistema Venus Protocol na BNB Chain (Core Pool)
-const COLLATERAL_FACTOR = 0.80; 
-const VENUS_COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384"; // Core Pool Comptroller
-const VBTC_CONTRACT_ADDRESS = "0x882c173bc7ff3b7786ca16dfed3dfffb9ee7847b"; // Endereço do vBTC
-const BSC_RPC_URL = "https://binance.org"; // RPC Pública estável da BSC
+    const CARTEIRA_ALVO = "0x49F8739791713858A6718564f035f8c35905829C";
+    const LIMIT_THRESHOLD = 0.80; 
+    
+    let precoGlobalBTC = 0;
+    let colateralRealUSD = 0; 
+    let emprestadoRealUSD = 0;
+    let fatorSaudeAtual = 999;
+    
+    // Lista para guardar objetos { tempo: timestamp, preco: valor }
+    let historicoPrecoBTC = []; 
 
-// ABIs Human-Readable para Ethers v6 interagir sem carregar JSONs gigantes
-const vTokenAbi = [
-    "function balanceOf(address owner) view returns (uint256)",
-    "function exchangeRateStored() view returns (uint256)"
-];
+    let audioCtx = null;
+    let alarmeIntervalo = null;
+    let audioPermitido = false;
+    let crashAlertaAtivo = false;
 
-const comptrollerAbi = [
-    "function getAccountLiquidity(address account) view returns (uint256 error, uint256 liquidity, uint256 shortfall)"
-];
-
-function parseInputField(id) {
-    const value = document.getElementById(id).value.toString();
-    return parseFloat(value.replace(',', '.')) || 0;
-}
-
-function calcular() {
-    const btcPrice = parseInputField('btcPrice');
-    const btcBalance = parseInputField('btcBalance');
-    const borrow = parseInputField('borrow');
-
-    const totalCollateralValue = btcBalance * btcPrice;
-    const borrowLimit = totalCollateralValue * COLLATERAL_FACTOR;
-
-    let healthFactor = 0;
-    if (borrow > 0) {
-        healthFactor = borrowLimit / borrow;
-    } else {
-        healthFactor = btcBalance > 0 ? 999 : 0;
+    function ativarAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        audioPermitido = true;
+        document.getElementById('btn-som').innerText = "Alertas Ativados";
+        document.getElementById('btn-som').style.backgroundColor = "#10b981";
+        document.getElementById('btn-som').style.borderColor = "#10b981";
+        
+        executarCicloMonitoramento();
+        setInterval(executarCicloMonitoramento, 10000); 
     }
 
-    const resultBox = document.getElementById('result');
-    const liqPriceBox = document.getElementById('liquidationPrice');
-
-    if (healthFactor === 0) {
-        resultBox.innerText = "Fator de Saúde Atual: N/A";
-        resultBox.className = "result-box moderate";
-    } else if (healthFactor >= 999) {
-        resultBox.innerText = "Fator de Saúde: Sem Dívidas (Seguro)";
-        resultBox.className = "result-box super-safe";
-    } else {
-        resultBox.innerText = `Fator de Saúde Atual: ${healthFactor.toFixed(2)}`;
-        if (healthFactor > 1.5) {
-            resultBox.className = "result-box super-safe";
-        } else if (healthFactor > 1.1) {
-            resultBox.className = "result-box safe";
-        } else if (healthFactor > 1.0) {
-            resultBox.className = "result-box moderate";
+    function tocarBip() {
+        if (!audioPermitido || !audioCtx) return;
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = "sine";
+        
+        // Se for um Flash Crash (queda repentina), o som vira uma sirene rápida de duas frequências
+        if (crashAlertaAtivo) {
+            osc.frequency.value = Math.sin(audioCtx.currentTime * 10) > 0 ? 1500 : 900;
         } else {
-            resultBox.className = "result-box danger";
+            osc.frequency.value = fatorSaudeAtual <= 1.20 ? 1200 : 880; 
+        }
+        
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime); 
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+    }
+
+    function gerenciarAlarme(deveTocar, motivo = "saude") {
+        if (deveTocar) {
+            if (motivo === "crash") {
+                crashAlertaAtivo = true;
+                document.body.classList.add('flash-crash-ativo');
+            } else {
+                document.body.classList.add('alerta-visual-ativo');
+            }
+
+            if (audioPermitido && !alarmeIntervalo) {
+                tocarBip();
+                // Flash crash ou saúde < 1.20 disparam bipes ultra-rápidos (400ms a 600ms)
+                let intervaloTempo = crashAlertaAtivo ? 400 : (fatorSaudeAtual <= 1.20 ? 600 : 1200);
+                alarmeIntervalo = setInterval(tocarBip, intervaloTempo); 
+            }
+        } else {
+            // Só desliga tudo se ambos os riscos sumirem
+            if (!crashAlertaAtivo && fatorSaudeAtual > 1.40) {
+                if (alarmeIntervalo) {
+                    clearInterval(alarmeIntervalo);
+                    alarmeIntervalo = null;
+                }
+                document.body.classList.remove('alerta-visual-ativo');
+                document.body.classList.remove('flash-crash-ativo');
+            }
         }
     }
 
-    if (btcBalance > 0 && borrow > 0) {
-        const liqPrice = borrow / (btcBalance * COLLATERAL_FACTOR);
-        liqPriceBox.innerText = `Preço limite de liquidação: US$ ${liqPrice.toFixed(2)}`;
-    } else {
-        liqPriceBox.innerText = "Preço limite de liquidação: US$ --";
+    async function buscarPrecoBTC() {
+        try {
+            const resposta = await fetch("https://binance.com");
+            const dados = await resposta.json();
+            precoGlobalBTC = parseFloat(dados.price);
+            document.getElementById('btc-online').innerText = "US$ " + precoGlobalBTC.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Adiciona o preço atual com a hora atualizada no histórico interno
+            const agora = Date.now();
+            historicoPrecoBTC.push({ tempo: agora, preco: precoGlobalBTC });
+
+            // Limpa registros mais velhos que 35 minutos para evitar acúmulo de lixo na memória
+            const limiteMaximoHistorico = agora - (35 * 60 * 1000);
+            historicoPrecoBTC = historicoPrecoBTC.filter(item => item.tempo >= limiteMaximoHistorico);
+
+        } catch (erro) {
+            console.error("Erro ao buscar preço do BTC:", erro);
+        }
     }
 
-    const tableBody = document.getElementById('projectionTable');
-    tableBody.innerHTML = "";
+    function verificarVariacaoPreco() {
+        if (historicoPrecoBTC.length < 2) return;
 
-    const quedas =;
-    quedas.forEach(queda => {
-        const projPrice = btcPrice * (1 - queda / 100);
-        const projCollateralValue = btcBalance * projPrice;
-        const projBorrowLimit = projCollateralValue * COLLATERAL_FACTOR;
-        const projHealth = borrow > 0 ? (projBorrowLimit / borrow) : 999;
+        const agora = Date.now();
+        const trintaMinutosAtras = agora - (30 * 60 * 1000);
 
-        let healthClass = "text-danger";
-        if (projHealth > 1.5) healthClass = "text-super-safe";
-        else if (projHealth > 1.1) healthClass = "text-safe";
-        else if (projHealth > 1.0) healthClass = "text-warning";
+        // Encontra o registro que mais se aproxima da marca exata de 30 minutos atrás
+        let registroReferencia = historicoPrecoBTC[0];
+        let menorDiferenca = Math.abs(registroReferencia.tempo - trintaMinutosAtras);
 
-        const textHealth = projHealth >= 999 ? "Seguro" : projHealth.toFixed(2);
-
-        const row = `<tr>
-            <td>${queda}%</td>
-            <td>US$ ${projPrice.toFixed(2)}</td>
-            <td>US$ ${projCollateralValue.toFixed(2)}</td>
-            <td class="${healthClass}">${textHealth}</td>
-        </tr>`;
-        tableBody.innerHTML += row;
-    });
-}
-
-// INTEGRAÇÃO WEB3 REAL USANDO ETHERS.JS V6
-async function sincronizarDados() {
-    const wallet = document.getElementById('walletAddress').value.trim();
-    const syncBtn = document.getElementById('syncBtn');
-    const statusMsg = document.getElementById('statusMsg');
-
-    if (!ethers.isAddress(wallet)) {
-        statusMsg.innerText = "Erro: Endereço de carteira BSC inválido.";
-        statusMsg.style.color = "#f85149";
-        return;
-    }
-
-    try {
-        syncBtn.disabled = true;
-        statusMsg.style.color = "#58a6ff";
-        statusMsg.innerText = "Conectando à Rede Blockchain (BSC Node)...";
-
-        // 1. Inicializa o provedor JSON-RPC para a BNB Chain
-        const provider = new ethers.JsonRpcProvider(BSC_RPC_URL);
-
-        statusMsg.innerText = "Buscando dados no protocolo Venus...";
-
-        // 2. Instancia os Smart Contracts
-        const vBtcContract = new ethers.Contract(VBTC_CONTRACT_ADDRESS, vTokenAbi, provider);
-        const comptrollerContract = new ethers.Contract(VENUS_COMPTROLLER_ADDRESS, comptrollerAbi, provider);
-
-        // 3. Executa as chamadas em paralelo para otimizar velocidade
-        const [vBtcBalance, exchangeRate, liquidityData, btcPriceRaw] = await Promise.all([
-            vBtcContract.balanceOf(wallet),
-            vBtcContract.exchangeRateStored(),
-            comptrollerContract.getAccountLiquidity(wallet),
