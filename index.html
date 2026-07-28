@@ -3,289 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Venus Protocol</title>
+    <title>Calculadora de Risco e Projeções - Venus Real-Time</title>
     <style>
-        html, body {
-            transition: background-color 0.3s ease;
-        }
         body {
-            background-color: #0c0d14;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 16px;
-        }
-        .alerta-visual-ativo {
-            animation: piscarVermelho 1s infinite alternate;
-        }
-        .flash-crash-ativo {
-            animation: piscarRoxo 0.5s infinite alternate !important;
-        }
-        @keyframes piscarVermelho {
-            0% { background-color: #0c0d14; }
-            100% { background-color: #3a0d13; }
-        }
-        @keyframes piscarRoxo {
-            0% { background-color: #0c0d14; }
-            100% { background-color: #2e0854; }
+            font-family: Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .container {
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        .card {
-            background-color: #161926;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid #23283d;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        h2 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            color: #858da6;
-            font-weight: 500;
-        }
-        .live-price {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #10b981;
-            margin-top: 5px;
-        }
-        .var-30min {
-            font-size: 0.9rem;
-            margin-top: 4px;
-            color: #858da6;
-        }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-            font-size: 0.95rem;
-            border-bottom: 1px solid #1f2438;
-            padding-bottom: 8px;
-        }
-        .info-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        .label { color: #858da6; }
-        .data { 
-            font-weight: 500; 
-            white-space: nowrap;
-        }
-        .wallet-text {
-            font-size: 0.75rem;
-            color: #f59e0b;
-            word-break: break-all;
-            text-align: center;
-            margin-top: 10px;
-        }
-        .sync-text {
-            font-size: 0.8rem;
-            color: #5d657b;
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        .btn-audio {
+            background-color: #161b22;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            max-width: 500px;
             width: 100%;
-            background-color: #23283d;
-            color: #fff;
-            border: 1px solid #3b4260;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 16px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            transition: all 0.2s;
+            margin-bottom: 20px;
         }
-        .btn-audio:hover {
-            background-color: #2e3552;
-        }
-        .danger-text {
-            color: #ef4444 !important;
-        }
-        .wallet-input-container {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .wallet-input {
-            flex: 1;
-            background-color: #161926;
-            border: 1px solid #23283d;
-            color: #ffffff;
+        h2, h3 { text-align: center; color: #58a6ff; margin-top: 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input {
+            width: 100%;
             padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 0.85rem;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            background-color: #0d1117;
+            color: #f0f6fc;
+            box-sizing: border-box;
+            font-size: 16px;
         }
-        .wallet-input:focus {
-            outline: none;
-            border-color: #3b4260;
-        }
-        .btn-wallet {
-            background-color: #3b4260;
-            color: #ffffff;
+        .btn-connect {
+            width: 100%;
+            padding: 12px;
+            background-color: #1f6feb;
+            color: white;
             border: none;
-            padding: 0 16px;
-            border-radius: 8px;
-            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
             font-weight: bold;
-            font-size: 0.85rem;
-            transition: background-color 0.2s;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: background 0.2s;
         }
-        .btn-wallet:hover {
-            background-color: #4c557c;
+        .btn-connect:hover { background-color: #388bfd; }
+        .btn-connect:disabled { background-color: #21262d; color: #8b949e; cursor: not-allowed; }
+        .wallet-connected { color: #3fb950; font-size: 13px; text-align: center; margin-top: 10px; font-weight: bold; }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
         }
+        .super-safe { background-color: #238636; color: white; }
+        .safe { background-color: #1f6feb; color: white; }
+        .moderate { background-color: #d29922; color: black; }
+        .danger { background-color: #f85149; color: white; }
+        .info { font-size: 14px; color: #8b949e; margin-top: 10px; text-align: center; font-weight: bold; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #30363d;
+        }
+        th { background-color: #21262d; color: #58a6ff; }
+        tr:hover { background-color: #21262d; }
+        .text-danger { color: #f85149; font-weight: bold; }
+        .text-warning { color: #d29922; font-weight: bold; }
+        .text-safe { color: #58a6ff; font-weight: bold; }
+        .text-super-safe { color: #3fb950; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="wallet-input-container">
-        <input type="text" id="input-carteira" class="wallet-input" placeholder="0x... (Endereço da Carteira)">
-        <button class="btn-wallet" onclick="alterarCarteira()">Salvar</button>
+    <h2>Sincronizar Conta e Preço Real</h2>
+    <div class="input-group">
+        <label>Endereço da Carteira (BSC):</label>
+        <input type="text" id="walletAddress" placeholder="Ex: 0x1234... ou digite sua carteira">
+    </div>
+    <button class="btn-connect" id="btnFetch" onclick="buscarDadosEPrecoReal()">Carregar Dados Real-Time</button>
+    <div id="walletStatus" class="wallet-connected" style="display: none;"></div>
+</div>
+
+<div class="container">
+    <h2>Simulador Dinâmico Venus</h2>
+    
+    <div class="input-group">
+        <label>Preço Atual do BTC no Mercado (US$):</label>
+        <input type="number" id="btcPrice" value="61000" oninput="calcular()">
     </div>
 
-    <button class="btn-audio" id="btn-som" onclick="ativarAudio()">Ativar Alertas Sonoros</button>
-    <div class="sync-text" id="status-sync">Aguardando ativação...</div>
-
-    <div class="card">
-        <h2>Preço do BTC em Tempo Real</h2>
-        <div class="live-price" id="btc-online">Carregando...</div>
-        <div class="var-30min" id="btc-var-30m">Variação (30m): Calculando histórico...</div>
+    <div class="input-group">
+        <label>Seu Saldo BTCB (Colateral):</label>
+        <input type="number" id="btcBalance" value="0" step="0.000001" oninput="calcular()">
     </div>
 
-    <div class="card">
-        <h2>Dados da sua Posição (On-Chain)</h2>
-        <div class="info-row">
-            <span class="label">Colateral Fornecido:</span>
-            <span class="data" id="txt-colateral">Carregando...</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Valor Emprestado:</span>
-            <span class="data" id="txt-emprestado">Carregando...</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Limite de Alavancagem Médio:</span>
-            <span class="data">~80% (Core Pool)</span>
-        </div>
+    <div class="input-group">
+        <label>Sua Dívida Total (US$):</label>
+        <input type="number" id="borrow" value="0" step="0.01" oninput="calcular()">
     </div>
 
-    <div class="card">
-        <h2>Pontos de Risco e Saúde</h2>
-        <div class="info-row">
-            <span class="label">Fator de Saúde Atual:</span>
-            <span class="data" style="color: #10b981; font-weight: bold;" id="hf-dinamico">---</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Alvo para Saúde 1.40 (Aviso):</span>
-            <span class="data" style="color: #f59e0b; font-weight: bold;" id="alvo-140">Calculando...</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Alvo para Saúde 1.20 (Risco Alto):</span>
-            <span class="data" style="color: #f97316; font-weight: bold;" id="alvo-120">Calculando...</span>
-        </div>
-        <div class="info-row">
-            <span class="label">Liquidação (Saúde 1.0):</span>
-            <span class="data" style="color: #ef4444; font-weight: bold;" id="alvo-100">Calculando...</span>
-        </div>
+    <div id="result" class="result-box moderate">
+        Fator de Saúde Atual: --
     </div>
-
-    <div class="card">
-        <h2>Simulação de Queda do BTC</h2>
-        <div id="simulacao-quedas">
-            <div class="info-row"><span class="label">Aguardando dados do mercado...</span></div>
-        </div>
-    </div>
-
-    <div class="wallet-text">
-        Monitorando via API Venus:<br>
-        <span style="font-family: monospace;" id="txt-carteira-ativa">---</span>
+    
+    <div id="liquidationPrice" class="info">
+        Preço limite de liquidação: US$ --
     </div>
 </div>
 
+<div class="container">
+    <h3>Projeções Automáticas de Queda</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Queda</th>
+                <th>Preço BTC</th>
+                <th>Seu Colateral</th>
+                <th>Fator Saúde</th>
+            </tr>
+        </thead>
+        <tbody id="projectionTable">
+        </tbody>
+    </table>
+</div>
+
 <script>
-    const CARTEIRA_PADRAO = "0x49F8739791713858A6718564f035f8c35905829C";
-    const LIMIT_THRESHOLD = 0.80; 
+// Nova função que consome o preço real do BTC no mercado e os dados da carteira
+async function buscarDadosEPrecoReal() {
+    const address = document.getElementById('walletAddress').value.trim();
+    const btn = document.getElementById('btnFetch');
+    const statusDiv = document.getElementById('walletStatus');
+
+    if (!address.startsWith("0x") || address.length !== 42) {
+        alert("Por favor, digite um endereço de carteira válido da BNB Chain (começando com 0x).");
+        return;
+    }
+
+    try {
+        btn.disabled = true;
+        btn.innerText = "Buscando dados on-chain...";
+        statusDiv.style.display = "none";
+
+        // 1. Executa requisições paralelas: Preço de mercado do BTC + Dados de Conta do Venus Protocol
+        const [priceResponse, venusResponse] = await Promise.all([
+            fetch('https://binance.com'),
+            fetch(`https://venus.io{address}`)
+        ]);
+
+        if (!priceResponse.ok || !venusResponse.ok) {
+            throw new Error("Falha ao se conectar com os servidores da API.");
+        }
+
+        const priceData = await priceResponse.json();
+        const venusData = await venusResponse.json();
+
+        // 2. Extrai e preenche o preço de mercado atualizado do Bitcoin
+        const btcMarketPrice = parseFloat(priceData.price);
+        if (btcMarketPrice > 0) {
+            document.getElementById('btcPrice').value = btcMarketPrice.toFixed(2);
+        }
+
+        // 3. Processa dados de saldo e dívida da carteira do usuário
+        if (!venusData || !venusData.data) {
+            throw new Error("Dados da conta indisponíveis na API do Venus.");
+        }
+
+        const markets = venusData.data.markets || [];
+        const vBtcContract = "0x882c173bc7ff3b7786ca16dfed3dffffb9ee7847".toLowerCase();
+        let btcbCollateral = 0;
+        
+        markets.forEach(m => {
+            if (m.address.toLowerCase() === vBtcContract) {
+                const supplyInUnderlying = parseFloat(m.supplyBalanceInToken);
+                if (m.collateral) {
+                    btcbCollateral = supplyInUnderlying;
+                }
+            }
+        });
+
+        const totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
+
+        // 4. Injeta os dados financeiros extraídos na interface do usuário
+        document.getElementById('btcBalance').value = btcbCollateral;
+        document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
+
+        // Formatação visual de sucesso
+        const shortAddress = address.substring(0, 6) + "..." + address.substring(address.length - 4);
+        statusDiv.innerText = `Preço (US$ ${btcMarketPrice.toLocaleString('pt-BR')}) e carteira ${shortAddress} sincronizados!`;
+        statusDiv.style.color = "#3fb950";
+        statusDiv.style.display = "block";
+
+        // Dispara o cálculo matemático atualizado
+        calcular();
+
+    } catch (error) {
+        console.error(error);
+        statusDiv.innerText = "Erro ao buscar dados atualizados de preço ou saldo.";
+        statusDiv.style.color = "#f85149";
+        statusDiv.style.display = "block";
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Carregar Dados Real-Time";
+    }
+}
+
+function calcular() {
+    const price = parseFloat(document.getElementById('btcPrice').value) || 0;
+    const balance = parseFloat(document.getElementById('btcBalance').value) || 0;
+    const borrow = parseFloat(document.getElementById('borrow').value) || 0;
+    const fatorGarantia = 0.80; 
     
-    let carteiraAtiva = localStorage.getItem('venus_monitor_wallet') || CARTEIRA_PADRAO;
-    let precoGlobalBTC = 0;
-    let colateralRealUSD = 0; 
-    let emprestadoRealUSD = 0;
-    let fatorSaudeAtual = 999;
+    if (borrow <= 0) {
+        document.getElementById('result').innerText = "Fator de Saúde: ∞";
+        document.getElementById('result').className = "result-box super-safe";
+        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
+        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
+        return;
+    }
+
+    const colateralTotal = balance * price;
+    const hfAtual = (colateralTotal * fatorGarantia) / borrow;
+    const liqPrice = borrow / (balance * fatorGarantia);
+
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerText = "Fator de Saúde Atual: " + hfAtual.toFixed(2);
     
-    let historicoPrecoBTC = []; 
+    if (hfAtual >= 2.0) resultDiv.className = "result-box super-safe";
+    else if (hfAtual >= 1.5) resultDiv.className = "result-box safe";
+    else if (hfAtual >= 1.15) resultDiv.className = "result-box moderate";
+    else resultDiv.className = "result-box danger";
 
-    let audioCtx = null;
-    let alarmeIntervalo = null;
-    let audioPermitido = false;
+    document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: US$ " + Math.round(liqPrice).toLocaleString('pt-BR');
 
-    // Inicializa a interface com a carteira ativa
-    document.getElementById('input-carteira').value = carteiraAtiva;
-    document.getElementById('txt-carteira-ativa').innerText = carteiraAtiva;
+    const percentages = [0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20, 0.25, 0.26, 0.27, 0.28, 0.29, 0.30];
+    let htmlPrevisoes = "";
 
-    function alterarCarteira() {
-        const novoEndereco = document.getElementById('input-carteira').value.trim();
+    percentages.forEach(queda => {
+        const precoProjetado = price * (1 - queda);
+        const colateralProjetado = balance * precoProjetado;
+        const hfProjetado = (colateralProjetado * fatorGarantia) / borrow;
         
-        if (!/^0x[a-fA-F0-9]{40}$/.test(novoEndereco)) {
-            alert("Por favor, insira um endereço de carteira válido (0x...)");
-            return;
-        }
-
-        carteiraAtiva = novoEndereco;
-        localStorage.setItem('venus_monitor_wallet', carteiraAtiva);
-        document.getElementById('txt-carteira-ativa').innerText = carteiraAtiva;
-        
-        document.getElementById('txt-colateral').innerText = "Carregando...";
-        document.getElementById('txt-emprestado').innerText = "Carregando...";
-        document.getElementById('hf-dinamico').innerText = "---";
-        
-        buscarDadosVenus();
-    }
-
-    function ativarAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        audioPermitido = true;
-        document.getElementById('btn-som').innerText = "🔊 Alertas Sonoros Ativos";
-        document.getElementById('btn-som').style.backgroundColor = "#10b981";
-    }
-
-    function tocarBipe(frequencia = 440, duracao = 0.15) {
-        if (!audioPermitido || !audioCtx) return;
-        try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.frequency.value = frequencia;
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duracao);
-        } catch (e) {
-            console.error("Erro de áudio:", e);
-        }
-    }
-
-    async function buscarPrecoBTC() {
-        try {
-            const res = await fetch('https://binance.com');
-            const dados = await res.json();
-            precoGlobalBTC = parseFloat(dados.price);
-            
-            document.getElementById('btc-online').innerText = `U$ ${precoGlobalBTC.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            
-            const agora = Date.now();
-            historicoPrecoBTC.push({ timestamp: agora, preco: precoGlobalBTC });
-            historicoPrecoBTC = historicoPrecoBTC.filter(p => agora - p.timestamp <= 30 * 60 * 1000);
-            
-            if (historicoPrecoBTC.length > 1) {
-                const precoInicial = historicoPrecoBTC[0].preco;
-                const variacao = ((precoGlobalBTC - precoInicial) / precoInicial) * 100;
-                const sinal = variacao >= 0 ? "+" : "";
+        let classeStatus = "text-safe";
+        if (hfProjetado >= 2.0) classeStatus = "text-super-safe";
