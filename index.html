@@ -1,28 +1,286 @@
-// Exemplo da lógica corrigida para encerramento de alarmes e cálculo de alvos
-function gerenciarAlarme(deveTocar, motivo = "saude") {
-    if (deveTocar) {
-        if (motivo === "crash") {
-            crashAlertaAtivo = true;
-            document.body.classList.add('flash-crash-ativo');
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Venus Protocol</title>
+    <style>
+        html, body {
+            transition: background-color 0.3s ease;
+        }
+        body {
+            background-color: #0c0d14;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 16px;
+        }
+        .alerta-visual-ativo {
+            animation: piscarVermelho 1s infinite alternate;
+        }
+        .flash-crash-ativo {
+            animation: piscarRoxo 0.5s infinite alternate !important;
+        }
+        @keyframes piscarVermelho {
+            0% { background-color: #0c0d14; }
+            100% { background-color: #3a0d13; }
+        }
+        @keyframes piscarRoxo {
+            0% { background-color: #0c0d14; }
+            100% { background-color: #2e0854; }
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: #161926;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #23283d;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: #858da6;
+            font-weight: 500;
+        }
+        .live-price {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #10b981;
+            margin-top: 5px;
+        }
+        .var-30min {
+            font-size: 0.9rem;
+            margin-top: 4px;
+            color: #858da6;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #1f2438;
+            padding-bottom: 8px;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .label { color: #858da6; }
+        .data { 
+            font-weight: 500; 
+            white-space: nowrap;
+        }
+        .wallet-text {
+            font-size: 0.75rem;
+            color: #f59e0b;
+            word-break: break-all;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .sync-text {
+            font-size: 0.8rem;
+            color: #5d657b;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .btn-audio {
+            width: 100%;
+            background-color: #23283d;
+            color: #fff;
+            border: 1px solid #3b4260;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .btn-audio:hover {
+            background-color: #2e3552;
+        }
+        .danger-text {
+            color: #ef4444 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button class="btn-audio" id="btn-som" onclick="ativarAudio()">Ativar Alertas Sonoros</button>
+    <div class="sync-text" id="status-sync">Aguardando ativação...</div>
+
+    <div class="card">
+        <h2>Preço do BTC em Tempo Real</h2>
+        <div class="live-price" id="btc-online">Carregando...</div>
+        <div class="var-30min" id="btc-var-30m">Variação (30m): Calculando histórico...</div>
+    </div>
+
+    <div class="card">
+        <h2>Dados da sua Posição (On-Chain)</h2>
+        <div class="info-row">
+            <span class="label">Colateral Fornecido:</span>
+            <span class="data" id="txt-colateral">Carregando...</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Valor Emprestado:</span>
+            <span class="data" id="txt-emprestado">Carregando...</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Limite de Alavancagem Médio:</span>
+            <span class="data">~80% (Core Pool)</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Pontos de Risco e Saúde</h2>
+        <div class="info-row">
+            <span class="label">Fator de Saúde Atual:</span>
+            <span class="data" style="color: #10b981; font-weight: bold;" id="hf-dinamico">---</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Alvo para Saúde 1.40 (Aviso):</span>
+            <span class="data" style="color: #f59e0b; font-weight: bold;" id="alvo-140">Calculando...</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Alvo para Saúde 1.20 (Risco Alto):</span>
+            <span class="data" style="color: #f97316; font-weight: bold;" id="alvo-120">Calculando...</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Liquidação (Saúde 1.0):</span>
+            <span class="data" style="color: #ef4444; font-weight: bold;" id="alvo-100">Calculando...</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Simulação de Queda do BTC</h2>
+        <div id="simulacao-quedas">
+            <div class="info-row"><span class="label">Aguardando dados do mercado...</span></div>
+        </div>
+    </div>
+
+    <div class="wallet-text">
+        Monitorando via API Venus:<br>
+        <span style="font-family: monospace;">0x49F8739791713858A6718564f035f8c35905829C</span>
+    </div>
+</div>
+
+<script>
+    const CARTEIRA_ALVO = "0x49F8739791713858A6718564f035f8c35905829C";
+    const LIMIT_THRESHOLD = 0.80; 
+    
+    let precoGlobalBTC = 0;
+    let colateralRealUSD = 0; 
+    let emprestadoRealUSD = 0;
+    let fatorSaudeAtual = 999;
+    
+    let historicoPrecoBTC = []; 
+
+    let audioCtx = null;
+    let alarmeIntervalo = null;
+    let audioPermitido = false;
+    let crashAlertaAtivo = false;
+
+    function ativarAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        audioPermitido = true;
+        document.getElementById('btn-som').innerText = "Alertas Ativados";
+        document.getElementById('btn-som').style.backgroundColor = "#10b981";
+        document.getElementById('btn-som').style.borderColor = "#10b981";
+        
+        executarCicloMonitoramento();
+        setInterval(executarCicloMonitoramento, 10000); 
+    }
+
+    function tocarBip() {
+        if (!audioPermitido || !audioCtx) return;
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = "sine";
+        
+        if (crashAlertaAtivo) {
+            osc.frequency.value = Math.sin(audioCtx.currentTime * 10) > 0 ? 1500 : 900;
         } else {
-            document.body.classList.add('alerta-visual-ativo');
+            osc.frequency.value = fatorSaudeAtual <= 1.20 ? 1200 : 880; 
         }
-        if (audioPermitido && !alarmeIntervalo) {
-            tocarBip();
-            let intervaloTempo = crashAlertaAtivo ? 400 : (fatorSaudeAtual <= 1.20 ? 600 : 1200);
-            alarmeIntervalo = setInterval(tocarBip, intervaloTempo); 
-        }
-    } else {
-        if (motivo === "crash") {
-            crashAlertaAtivo = false;
-            document.body.classList.remove('flash-crash-ativo');
-        }
-        if (!crashAlertaAtivo && fatorSaudeAtual > 1.40) {
-            document.body.classList.remove('alerta-visual-ativo');
-            if (alarmeIntervalo) {
-                clearInterval(alarmeIntervalo);
-                alarmeIntervalo = null;
+        
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime); 
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+    }
+
+    function gerenciarAlarme(deveTocar, motivo = "saude") {
+        if (deveTocar) {
+            if (motivo === "crash") {
+                crashAlertaAtivo = true;
+                document.body.classList.add('flash-crash-ativo');
+            } else {
+                document.body.classList.add('alerta-visual-ativo');
+            }
+
+            if (audioPermitido && !alarmeIntervalo) {
+                tocarBip();
+                let intervaloTempo = crashAlertaAtivo ? 400 : (fatorSaudeAtual <= 1.20 ? 600 : 1200);
+                alarmeIntervalo = setInterval(tocarBip, intervaloTempo); 
+            }
+        } else {
+            if (motivo === "crash") {
+                crashAlertaAtivo = false;
+                document.body.classList.remove('flash-crash-ativo');
+            }
+            if (!crashAlertaAtivo && fatorSaudeAtual > 1.40) {
+                document.body.classList.remove('alerta-visual-ativo');
+                if (alarmeIntervalo) {
+                    clearInterval(alarmeIntervalo);
+                    alarmeIntervalo = null;
+                }
             }
         }
     }
-}
+
+    async function buscarDadosMercado() {
+        try {
+            const res = await fetch("https://binance.com");
+            const dados = await res.json();
+            precoGlobalBTC = parseFloat(dados.price);
+            document.getElementById("btc-online").innerText = `U$ ${precoGlobalBTC.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            const agora = Date.now();
+            historicoPrecoBTC.push({ tempo: agora, preco: precoGlobalBTC });
+            historicoPrecoBTC = historicoPrecoBTC.filter(item => agora - item.tempo <= 1800000);
+            
+            if (historicoPrecoBTC.length > 1) {
+                const primeiroPreco = historicoPrecoBTC[0].preco;
+                const variacao = ((precoGlobalBTC - primeiroPreco) / primeiroPreco) * 100;
+                const sinal = variacao >= 0 ? "+" : "";
+                document.getElementById("btc-var-30m").innerText = `Variação (30m): ${sinal}${variacao.toFixed(2)}%`;
+                
+                if (variacao <= -3.0) {
+                    gerenciarAlarme(true, "crash");
+                } else {
+                    gerenciarAlarme(false, "crash");
+                }
+            }
+        } catch (erro) {
+            console.error("Erro ao buscar preço da Binance:", erro);
+        }
+    }
+
+    async function buscarDadosVenus() {
+        try {
+            const res = await fetch(`https://api.venus.io/api/v2/accounts/${CARTEIRA_ALVO}`);
+            if (!res.ok) throw new Error("Falha na API Venus");
+            const dados = await res.json();
+            
+            if (dados && dados.data) {
+                colateralRealUSD = parseFloat(dados.data.totalCollateralUSD || 0);
