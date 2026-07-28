@@ -90,7 +90,7 @@
     <h2>Sincronizar Conta e Preço Real</h2>
     <div class="input-group">
         <label>Endereço da Carteira (BSC):</label>
-        <input type="text" id="walletAddress" placeholder="Ex: 0x1234... ou digite sua carteira">
+        <input type="text" id="walletAddress" placeholder="Ex: 0x1234..." value="0x49F8739791713858A6718564f035f8">
     </div>
     <button class="btn-connect" id="btnFetch" onclick="buscarDadosEPrecoReal()">Carregar Dados Real-Time</button>
     <div id="walletStatus" class="wallet-connected" style="display: none;"></div>
@@ -140,14 +140,13 @@
 </div>
 
 <script>
-// Nova função que consome o preço real do BTC no mercado e os dados da carteira
 async function buscarDadosEPrecoReal() {
     const address = document.getElementById('walletAddress').value.trim();
     const btn = document.getElementById('btnFetch');
     const statusDiv = document.getElementById('walletStatus');
 
     if (!address.startsWith("0x") || address.length !== 42) {
-        alert("Por favor, digite um endereço de carteira válido da BNB Chain (começando com 0x).");
+        alert("Por favor, digite um endereço de carteira válido da BNB Chain (42 caracteres).");
         return;
     }
 
@@ -156,61 +155,56 @@ async function buscarDadosEPrecoReal() {
         btn.innerText = "Buscando dados on-chain...";
         statusDiv.style.display = "none";
 
-        // 1. Executa requisições paralelas: Preço de mercado do BTC + Dados de Conta do Venus Protocol
         const [priceResponse, venusResponse] = await Promise.all([
             fetch('https://binance.com'),
             fetch(`https://venus.io{address}`)
         ]);
 
         if (!priceResponse.ok || !venusResponse.ok) {
-            throw new Error("Falha ao se conectar com os servidores da API.");
+            throw new Error("Falha ao se conectar com os servidores de API.");
         }
 
         const priceData = await priceResponse.json();
         const venusData = await venusResponse.json();
 
-        // 2. Extrai e preenche o preço de mercado atualizado do Bitcoin
         const btcMarketPrice = parseFloat(priceData.price);
         if (btcMarketPrice > 0) {
             document.getElementById('btcPrice').value = btcMarketPrice.toFixed(2);
         }
 
-        // 3. Processa dados de saldo e dívida da carteira do usuário
         if (!venusData || !venusData.data) {
             throw new Error("Dados da conta indisponíveis na API do Venus.");
         }
 
         const markets = venusData.data.markets || [];
-        const vBtcContract = "0x882c173bc7ff3b7786ca16dfed3dffffb9ee7847".toLowerCase();
         let btcbCollateral = 0;
         
+        // CORREÇÃO: Varre os mercados buscando diretamente pela propriedade textual 'BTCB'
         markets.forEach(m => {
-            if (m.address.toLowerCase() === vBtcContract) {
-                const supplyInUnderlying = parseFloat(m.supplyBalanceInToken);
+            if (m.underlyingSymbol && m.underlyingSymbol.toUpperCase() === 'BTCB') {
+                const supplyInUnderlying = parseFloat(m.supplyBalanceInToken) || 0;
+                // Se o ativo estiver marcado como colateral ativo na Venus
                 if (m.collateral) {
-                    btcbCollateral = supplyInUnderlying;
+                    btcbCollateral += supplyInUnderlying;
                 }
             }
         });
 
         const totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
 
-        // 4. Injeta os dados financeiros extraídos na interface do usuário
         document.getElementById('btcBalance').value = btcbCollateral;
         document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
 
-        // Formatação visual de sucesso
         const shortAddress = address.substring(0, 6) + "..." + address.substring(address.length - 4);
         statusDiv.innerText = `Preço (US$ ${btcMarketPrice.toLocaleString('pt-BR')}) e carteira ${shortAddress} sincronizados!`;
         statusDiv.style.color = "#3fb950";
         statusDiv.style.display = "block";
 
-        // Dispara o cálculo matemático atualizado
         calcular();
 
     } catch (error) {
         console.error(error);
-        statusDiv.innerText = "Erro ao buscar dados atualizados de preço ou saldo.";
+        statusDiv.innerText = "Erro ao buscar dados atualizados. Verifique o endereço.";
         statusDiv.style.color = "#f85149";
         statusDiv.style.display = "block";
     } finally {
@@ -257,3 +251,11 @@ function calcular() {
         
         let classeStatus = "text-safe";
         if (hfProjetado >= 2.0) classeStatus = "text-super-safe";
+        else if (hfProjetado < 1.15) classeStatus = "text-danger";
+        else if (hfProjetado < 1.30) classeStatus = "text-warning";
+
+        if (precoProjetado > liqPrice) {
+            htmlPrevisoes += `
+                <tr>
+                    <td>-${(queda * 100).toFixed(0)}%</td>
+                    <td>US$ ${Math.round(precoProjetado).toLocaleString('pt-BR')}</td>
