@@ -160,17 +160,18 @@
     
     <div class="input-group">
         <label>Preço Atual do BTC no Mercado (US$):</label>
-        <input type="number" id="btcPrice" value="61000" oninput="calcular()">
+        <!-- Mudado para type="text" para suportar tratamento de vírgula perfeitamente -->
+        <input type="text" id="btcPrice" value="61000" oninput="calcular()">
     </div>
 
     <div class="input-group">
         <label>Seu Saldo BTCB (Colateral):</label>
-        <input type="number" id="btcBalance" value="0.001" step="0.000001" oninput="calcular()">
+        <input type="text" id="btcBalance" value="0.001" oninput="calcular()">
     </div>
 
     <div class="input-group">
         <label>Sua Dívida Total (US$):</label>
-        <input type="number" id="borrow" value="10" step="0.01" oninput="calcular()">
+        <input type="text" id="borrow" value="10" oninput="calcular()">
     </div>
 
     <div id="result" class="result-box moderate">
@@ -200,6 +201,13 @@
 
 <script>
 const COLLATERAL_FACTOR = 0.75;
+
+// Função auxiliar para converter texto com vírgula para número JS válido
+function parseInputNumber(value) {
+    if (!value) return 0;
+    let cleanValue = value.toString().replace(/,/g, '.');
+    return parseFloat(cleanValue) || 0;
+}
 
 async function buscarDadosEPrecoReal() {
     const address = document.getElementById('walletAddress').value.trim();
@@ -251,7 +259,6 @@ async function buscarDadosEPrecoReal() {
             totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
         }
 
-        // Preenche com os dados da API mas não bloqueia os campos
         document.getElementById('btcBalance').value = btcbCollateral;
         document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
 
@@ -264,8 +271,3 @@ async function buscarDadosEPrecoReal() {
 
     } catch (error) {
         console.error(error);
-        statusDiv.innerText = "Erro ao buscar dados atualizados de preço ou saldo.";
-        statusDiv.style.color = "#f85149";
-        statusDiv.style.display = "block";
-    } finally {
-        btn.disabled = false;
