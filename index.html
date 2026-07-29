@@ -160,7 +160,6 @@
     
     <div class="input-group">
         <label>Preço Atual do BTC no Mercado (US$):</label>
-        <!-- Mudado para type="text" para suportar tratamento de vírgula perfeitamente -->
         <input type="text" id="btcPrice" value="61000" oninput="calcular()">
     </div>
 
@@ -202,7 +201,7 @@
 <script>
 const COLLATERAL_FACTOR = 0.75;
 
-// Função auxiliar para converter texto com vírgula para número JS válido
+// Converte texto com vírgula ou ponto para número válido
 function parseInputNumber(value) {
     if (!value) return 0;
     let cleanValue = value.toString().replace(/,/g, '.');
@@ -219,55 +218,51 @@ async function buscarDadosEPrecoReal() {
         return;
     }
 
+    btn.disabled = true;
+    btn.innerText = "Buscando dados on-chain...";
+    statusDiv.style.display = "none";
+
+    // Modificado: requisições isoladas individualmente para evitar que falhas de segurança travem o script
     try {
-        btn.disabled = true;
-        btn.innerText = "Buscando dados on-chain...";
-        statusDiv.style.display = "none";
-
-        const [priceResponse, venusResponse] = await Promise.all([
-            fetch('https://binance.com'),
-            fetch(`https://venus.io{address}`)
-        ]);
-
-        if (!priceResponse.ok || !venusResponse.ok) {
-            throw new Error("Falha ao se conectar com os servidores da API.");
+        const priceResponse = await fetch('https://binance.com');
+        if (priceResponse.ok) {
+            const priceData = await priceResponse.json();
+            const btcMarketPrice = parseFloat(priceData.price);
+            if (btcMarketPrice > 0) {
+                document.getElementById('btcPrice').value = btcMarketPrice.toFixed(2);
+            }
         }
+    } catch (e) {
+        console.warn("Bloqueio de CORS na API da Binance. Mantendo preço manual.");
+    }
 
-        const priceData = await priceResponse.json();
-        const venusData = await venusResponse.json();
+    try {
+        const venusResponse = await fetch(`https://venus.io{address}`);
+        if (venusResponse.ok) {
+            const venusData = await venusResponse.json();
+            let btcbCollateral = 0;
+            let totalBorrowUsd = 0;
 
-        const btcMarketPrice = parseFloat(priceData.price);
-        if (btcMarketPrice > 0) {
-            document.getElementById('btcPrice').value = btcMarketPrice.toFixed(2);
-        }
-
-        let btcbCollateral = 0;
-        let totalBorrowUsd = 0;
-
-        if (venusData && venusData.data && venusData.data.markets) {
-            const markets = venusData.data.markets;
-            const vBtcContract = "0x882c173bc7ff3b7786ca16dfed3dffffb9ee7847".toLowerCase();
-            
-            markets.forEach(m => {
-                if (m.address.toLowerCase() === vBtcContract) {
-                    const supplyInUnderlying = parseFloat(m.supplyBalanceInToken);
-                    if (m.collateral) {
-                        btcbCollateral = supplyInUnderlying;
+            if (venusData && venusData.data && venusData.data.markets) {
+                const markets = venusData.data.markets;
+                const vBtcContract = "0x882c173bc7ff3b7786ca16dfed3dffffb9ee7847".toLowerCase();
+                
+                markets.forEach(m => {
+                    if (m.address.toLowerCase() === vBtcContract) {
+                        const supplyInUnderlying = parseFloat(m.supplyBalanceInToken);
+                        if (m.collateral) {
+                            btcbCollateral = supplyInUnderlying;
+                        }
                     }
-                }
-            });
-            totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
-        }
+                });
+                totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
+            }
 
-        document.getElementById('btcBalance').value = btcbCollateral;
-        document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
-
-        const shortAddress = address.substring(0, 6) + "..." + address.substring(address.length - 4);
-        statusDiv.innerText = `Preço (US$ ${btcMarketPrice.toLocaleString('pt-BR')}) e carteira ${shortAddress} sincronizados!`;
-        statusDiv.style.color = "#3fb950";
-        statusDiv.style.display = "block";
-
-        calcular();
-
-    } catch (error) {
-        console.error(error);
+            document.getElementById('btcBalance').value = btcbCollateral;
+            document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
+            
+            const shortAddress = address.substring(0, 6) + "..." + address.substring(address.length - 4);
+            statusDiv.innerText = `Carteira ${shortAddress} sincronizada!`;
+            statusDiv.style.color = "#3fb950";
+            statusDiv.style.display = "block";
+        } else {
