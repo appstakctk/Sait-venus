@@ -160,17 +160,17 @@
     
     <div class="input-group">
         <label>Preço Atual do BTC no Mercado (US$):</label>
-        <input type="text" id="btcPrice" value="61000" oninput="calcular()">
+        <input type="text" id="btcPrice" value="0" oninput="calcular()">
     </div>
 
     <div class="input-group">
         <label>Seu Saldo BTCB (Colateral):</label>
-        <input type="text" id="btcBalance" value="0.001" oninput="calcular()">
+        <input type="text" id="btcBalance" value="0" oninput="calcular()">
     </div>
 
     <div class="input-group">
         <label>Sua Dívida Total (US$):</label>
-        <input type="text" id="borrow" value="10" oninput="calcular()">
+        <input type="text" id="borrow" value="0" oninput="calcular()">
     </div>
 
     <div id="result" class="result-box moderate">
@@ -222,24 +222,31 @@ async function buscarDadosEPrecoReal() {
     btn.innerText = "Buscando dados on-chain...";
     statusDiv.style.display = "none";
 
-    // Modificado: requisições isoladas individualmente para evitar que falhas de segurança travem o script
+    // Integração com o proxy AllOrigins para quebrar o bloqueio CORS no mobile
+    const proxyUrl = "https://allorigins.win";
+    const binanceApi = encodeURIComponent('https://binance.com');
+    const venusApi = encodeURIComponent(`https://venus.io{address}`);
+
     try {
-        const priceResponse = await fetch('https://binance.com');
+        const priceResponse = await fetch(`${proxyUrl}${binanceApi}`);
         if (priceResponse.ok) {
-            const priceData = await priceResponse.json();
+            const proxyData = await priceResponse.json();
+            const priceData = JSON.parse(proxyData.contents);
             const btcMarketPrice = parseFloat(priceData.price);
             if (btcMarketPrice > 0) {
                 document.getElementById('btcPrice').value = btcMarketPrice.toFixed(2);
             }
         }
     } catch (e) {
-        console.warn("Bloqueio de CORS na API da Binance. Mantendo preço manual.");
+        console.warn("Falha ao obter preço da Binance via proxy.");
     }
 
     try {
-        const venusResponse = await fetch(`https://venus.io{address}`);
+        const venusResponse = await fetch(`${proxyUrl}${venusApi}`);
         if (venusResponse.ok) {
-            const venusData = await venusResponse.json();
+            const proxyData = await venusResponse.json();
+            const venusData = JSON.parse(proxyData.contents);
+            
             let btcbCollateral = 0;
             let totalBorrowUsd = 0;
 
@@ -261,8 +268,3 @@ async function buscarDadosEPrecoReal() {
             document.getElementById('btcBalance').value = btcbCollateral;
             document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
             
-            const shortAddress = address.substring(0, 6) + "..." + address.substring(address.length - 4);
-            statusDiv.innerText = `Carteira ${shortAddress} sincronizada!`;
-            statusDiv.style.color = "#3fb950";
-            statusDiv.style.display = "block";
-        } else {
