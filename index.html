@@ -14,6 +14,62 @@
             flex-direction: column;
             align-items: center;
         }
+        /* Novo container para o Indicador de Topo */
+        .status-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: #161b22;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+        .status-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #8b949e;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        .status-text {
+            font-size: 14px;
+            font-weight: bold;
+            color: #f0f6fc;
+        }
+        /* Animações de pulsação/piscante para as cores */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(63, 185, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); }
+        }
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(31, 111, 235, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(31, 111, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(31, 111, 235, 0); }
+        }
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 0 0 rgba(210, 153, 34, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(210, 153, 34, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(210, 153, 34, 0); }
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.8); transform: scale(1); }
+            50% { transform: scale(1.05); }
+            70% { box-shadow: 0 0 0 20px rgba(248, 81, 73, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); transform: scale(1); }
+        }
+        /* Classes dinâmicas do círculo */
+        .circle-super-safe { background-color: #3fb950; animation: pulse-green 2s infinite; }
+        .circle-safe { background-color: #1f6feb; animation: pulse-blue 2s infinite; }
+        .circle-moderate { background-color: #d29922; animation: pulse-yellow 1.5s infinite; }
+        .circle-danger { background-color: #f85149; animation: pulse-red 0.8s infinite; } /* Pisca mais rápido */
+
         .container {
             background-color: #161b22;
             padding: 25px;
@@ -22,6 +78,7 @@
             max-width: 500px;
             width: 100%;
             margin-bottom: 20px;
+            box-sizing: border-box;
         }
         h2, h3 { text-align: center; color: #58a6ff; margin-top: 0; }
         .input-group { margin-bottom: 15px; }
@@ -86,6 +143,12 @@
 </head>
 <body>
 
+<!-- NOVO: Indicador Visual no Topo -->
+<div class="status-header">
+    <div id="topCircle" class="status-circle"></div>
+    <div id="topStatusText" class="status-text">Fator Saúde: --</div>
+</div>
+
 <div class="container">
     <h2>Sincronizar Conta e Preço Real</h2>
     <div class="input-group">
@@ -140,7 +203,8 @@
 </div>
 
 <script>
-// Nova função que consome o preço real do BTC no mercado e os dados da carteira
+const COLLATERAL_FACTOR = 0.75;
+
 async function buscarDadosEPrecoReal() {
     const address = document.getElementById('walletAddress').value.trim();
     const btn = document.getElementById('btnFetch');
@@ -156,7 +220,6 @@ async function buscarDadosEPrecoReal() {
         btn.innerText = "Buscando dados on-chain...";
         statusDiv.style.display = "none";
 
-        // 1. Executa requisições paralelas: Preço de mercado do BTC + Dados de Conta do Venus Protocol
         const [priceResponse, venusResponse] = await Promise.all([
             fetch('https://binance.com'),
             fetch(`https://venus.io{address}`)
@@ -169,91 +232,39 @@ async function buscarDadosEPrecoReal() {
         const priceData = await priceResponse.json();
         const venusData = await venusResponse.json();
 
-        // 2. Extrai e preenche o preço de mercado atualizado do Bitcoin
         const btcMarketPrice = parseFloat(priceData.price);
         if (btcMarketPrice > 0) {
             document.getElementById('btcPrice').value = btcMarketPrice.toFixed(2);
         }
 
-        // 3. Processa dados de saldo e dívida da carteira do usuário
-        if (!venusData || !venusData.data) {
-            throw new Error("Dados da conta indisponíveis na API do Venus.");
+        let btcbCollateral = 0;
+        let totalBorrowUsd = 0;
+
+        if (venusData && venusData.data && venusData.data.markets) {
+            const markets = venusData.data.markets;
+            const vBtcContract = "0x882c173bc7ff3b7786ca16dfed3dffffb9ee7847".toLowerCase();
+            
+            markets.forEach(m => {
+                if (m.address.toLowerCase() === vBtcContract) {
+                    const supplyInUnderlying = parseFloat(m.supplyBalanceInToken);
+                    if (m.collateral) {
+                        btcbCollateral = supplyInUnderlying;
+                    }
+                }
+            });
+            totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
         }
 
-        const markets = venusData.data.markets || [];
-        const vBtcContract = "0x882c173bc7ff3b7786ca16dfed3dffffb9ee7847".toLowerCase();
-        let btcbCollateral = 0;
-        
-        markets.forEach(m => {
-            if (m.address.toLowerCase() === vBtcContract) {
-                const supplyInUnderlying = parseFloat(m.supplyBalanceInToken);
-                if (m.collateral) {
-                    btcbCollateral = supplyInUnderlying;
-                }
-            }
-        });
-
-        const totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
-
-        // 4. Injeta os dados financeiros extraídos na interface do usuário
         document.getElementById('btcBalance').value = btcbCollateral;
         document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
 
-        // Formatação visual de sucesso
         const shortAddress = address.substring(0, 6) + "..." + address.substring(address.length - 4);
         statusDiv.innerText = `Preço (US$ ${btcMarketPrice.toLocaleString('pt-BR')}) e carteira ${shortAddress} sincronizados!`;
         statusDiv.style.color = "#3fb950";
         statusDiv.style.display = "block";
 
-        // Dispara o cálculo matemático atualizado
         calcular();
 
     } catch (error) {
         console.error(error);
         statusDiv.innerText = "Erro ao buscar dados atualizados de preço ou saldo.";
-        statusDiv.style.color = "#f85149";
-        statusDiv.style.display = "block";
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "Carregar Dados Real-Time";
-    }
-}
-
-function calcular() {
-    const price = parseFloat(document.getElementById('btcPrice').value) || 0;
-    const balance = parseFloat(document.getElementById('btcBalance').value) || 0;
-    const borrow = parseFloat(document.getElementById('borrow').value) || 0;
-    const fatorGarantia = 0.80; 
-    
-    if (borrow <= 0) {
-        document.getElementById('result').innerText = "Fator de Saúde: ∞";
-        document.getElementById('result').className = "result-box super-safe";
-        document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: N/A";
-        document.getElementById('projectionTable').innerHTML = "<tr><td colspan='4'>Sem dívidas para projetar risco.</td></tr>";
-        return;
-    }
-
-    const colateralTotal = balance * price;
-    const hfAtual = (colateralTotal * fatorGarantia) / borrow;
-    const liqPrice = borrow / (balance * fatorGarantia);
-
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerText = "Fator de Saúde Atual: " + hfAtual.toFixed(2);
-    
-    if (hfAtual >= 2.0) resultDiv.className = "result-box super-safe";
-    else if (hfAtual >= 1.5) resultDiv.className = "result-box safe";
-    else if (hfAtual >= 1.15) resultDiv.className = "result-box moderate";
-    else resultDiv.className = "result-box danger";
-
-    document.getElementById('liquidationPrice').innerText = "Preço limite de liquidação: US$ " + Math.round(liqPrice).toLocaleString('pt-BR');
-
-    const percentages = [0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20, 0.25, 0.26, 0.27, 0.28, 0.29, 0.30];
-    let htmlPrevisoes = "";
-
-    percentages.forEach(queda => {
-        const precoProjetado = price * (1 - queda);
-        const colateralProjetado = balance * precoProjetado;
-        const hfProjetado = (colateralProjetado * fatorGarantia) / borrow;
-        
-        let classeStatus = "text-safe";
-        if (hfProjetado >= 2.0) classeStatus = "text-super-safe";
