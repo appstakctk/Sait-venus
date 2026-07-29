@@ -222,31 +222,24 @@ async function buscarDadosEPrecoReal() {
     btn.innerText = "Buscando dados on-chain...";
     statusDiv.style.display = "none";
 
-    // Integração com o proxy AllOrigins para quebrar o bloqueio CORS no mobile
-    const proxyUrl = "https://allorigins.win";
-    const binanceApi = encodeURIComponent('https://binance.com');
-    const venusApi = encodeURIComponent(`https://venus.io{address}`);
-
+    // Modificado: requisições isoladas diretas (sem proxy) com tratamento de erro independente
     try {
-        const priceResponse = await fetch(`${proxyUrl}${binanceApi}`);
+        const priceResponse = await fetch('https://binance.com');
         if (priceResponse.ok) {
-            const proxyData = await priceResponse.json();
-            const priceData = JSON.parse(proxyData.contents);
+            const priceData = await priceResponse.json();
             const btcMarketPrice = parseFloat(priceData.price);
             if (btcMarketPrice > 0) {
                 document.getElementById('btcPrice').value = btcMarketPrice.toFixed(2);
             }
         }
     } catch (e) {
-        console.warn("Falha ao obter preço da Binance via proxy.");
+        console.warn("API da Binance indisponível ou bloqueada por CORS no navegador.");
     }
 
     try {
-        const venusResponse = await fetch(`${proxyUrl}${venusApi}`);
+        const venusResponse = await fetch(`https://venus.io{address}`);
         if (venusResponse.ok) {
-            const proxyData = await venusResponse.json();
-            const venusData = JSON.parse(proxyData.contents);
-            
+            const venusData = await venusResponse.json();
             let btcbCollateral = 0;
             let totalBorrowUsd = 0;
 
@@ -268,3 +261,8 @@ async function buscarDadosEPrecoReal() {
             document.getElementById('btcBalance').value = btcbCollateral;
             document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
             
+            const shortAddress = address.substring(0, 6) + "..." + address.substring(address.length - 4);
+            statusDiv.innerText = `Carteira ${shortAddress} sincronizada com sucesso!`;
+            statusDiv.style.color = "#3fb950";
+            statusDiv.style.display = "block";
+        } else {
