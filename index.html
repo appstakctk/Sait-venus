@@ -149,7 +149,7 @@
     <h2>Sincronizar Conta e Preço Real</h2>
     <div class="input-group">
         <label>Endereço da Carteira (BSC):</label>
-        <input type="text" id="walletAddress" placeholder="Ex: 0x1234... ou digite sua carteira" value="0x20fC37d22869c778E530aF3f6">
+        <input type="text" id="walletAddress" placeholder="Ex: 0x1234... ou digite sua carteira">
     </div>
     <button class="btn-connect" id="btnFetch" onclick="buscarDadosEPrecoReal()">Carregar Dados Real-Time</button>
     <div id="walletStatus" class="wallet-connected" style="display: none;"></div>
@@ -251,6 +251,7 @@ async function buscarDadosEPrecoReal() {
             totalBorrowUsd = parseFloat(venusData.data.totalBorrowUsd) || 0;
         }
 
+        // Preenche com os dados da API mas não bloqueia os campos
         document.getElementById('btcBalance').value = btcbCollateral;
         document.getElementById('borrow').value = totalBorrowUsd.toFixed(2);
 
@@ -268,4 +269,3 @@ async function buscarDadosEPrecoReal() {
         statusDiv.style.display = "block";
     } finally {
         btn.disabled = false;
-        btn.innerText = "Carregar Dados Real-Time";
