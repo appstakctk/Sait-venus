@@ -14,7 +14,6 @@
             flex-direction: column;
             align-items: center;
         }
-        /* Novo container para o Indicador de Topo */
         .status-header {
             display: flex;
             flex-direction: column;
@@ -42,7 +41,6 @@
             font-weight: bold;
             color: #f0f6fc;
         }
-        /* Animações de pulsação/piscante para as cores */
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(63, 185, 80, 0); }
@@ -64,11 +62,10 @@
             70% { box-shadow: 0 0 0 20px rgba(248, 81, 73, 0); }
             100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); transform: scale(1); }
         }
-        /* Classes dinâmicas do círculo */
         .circle-super-safe { background-color: #3fb950; animation: pulse-green 2s infinite; }
         .circle-safe { background-color: #1f6feb; animation: pulse-blue 2s infinite; }
         .circle-moderate { background-color: #d29922; animation: pulse-yellow 1.5s infinite; }
-        .circle-danger { background-color: #f85149; animation: pulse-red 0.8s infinite; } /* Pisca mais rápido */
+        .circle-danger { background-color: #f85149; animation: pulse-red 0.8s infinite; }
 
         .container {
             background-color: #161b22;
@@ -143,7 +140,6 @@
 </head>
 <body>
 
-<!-- NOVO: Indicador Visual no Topo -->
 <div class="status-header">
     <div id="topCircle" class="status-circle"></div>
     <div id="topStatusText" class="status-text">Fator Saúde: --</div>
@@ -153,7 +149,7 @@
     <h2>Sincronizar Conta e Preço Real</h2>
     <div class="input-group">
         <label>Endereço da Carteira (BSC):</label>
-        <input type="text" id="walletAddress" placeholder="Ex: 0x1234... ou digite sua carteira">
+        <input type="text" id="walletAddress" placeholder="Ex: 0x1234... ou digite sua carteira" value="0x20fC37d22869c778E530aF3f6">
     </div>
     <button class="btn-connect" id="btnFetch" onclick="buscarDadosEPrecoReal()">Carregar Dados Real-Time</button>
     <div id="walletStatus" class="wallet-connected" style="display: none;"></div>
@@ -169,12 +165,12 @@
 
     <div class="input-group">
         <label>Seu Saldo BTCB (Colateral):</label>
-        <input type="number" id="btcBalance" value="0" step="0.000001" oninput="calcular()">
+        <input type="number" id="btcBalance" value="0.001" step="0.000001" oninput="calcular()">
     </div>
 
     <div class="input-group">
         <label>Sua Dívida Total (US$):</label>
-        <input type="number" id="borrow" value="0" step="0.01" oninput="calcular()">
+        <input type="number" id="borrow" value="10" step="0.01" oninput="calcular()">
     </div>
 
     <div id="result" class="result-box moderate">
@@ -268,3 +264,8 @@ async function buscarDadosEPrecoReal() {
     } catch (error) {
         console.error(error);
         statusDiv.innerText = "Erro ao buscar dados atualizados de preço ou saldo.";
+        statusDiv.style.color = "#f85149";
+        statusDiv.style.display = "block";
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Carregar Dados Real-Time";
