@@ -159,7 +159,7 @@
             margin-top: 24px;
         }
     </style>
-    <!-- Carrega a biblioteca estável necessária para decodificação blockchain -->
+    <!-- Importação corrigida e estável do Ethers.js v5 -->
     <script src="https://cloudflare.com"></script>
 </head>
 <body>
@@ -226,14 +226,16 @@
         const VBTC_CONTRACT_ADDRESS = "0x882C173bFB11d33F484199A673ACd02a846c4b26";
         const COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384";
 
-        // Provedor descentralizado via Ankr com CORS livre para rodar de forma perene no GitHub
-        const provider = new ethers.providers.JsonRpcProvider("https://ankr.com");
+        // Provedor público oficial da BNB Chain (estável e rápido)
+        const provider = new ethers.providers.JsonRpcProvider("https://binance.org");
+        let audioCtx = null;
         let audioContextEnabled = false;
 
         const vTokenAbi = [
             "function getAccountSnapshot(address account) external view returns (uint256, uint256, uint256, uint256)",
             "function supplyRatePerBlock() external view returns (uint256)",
-            "function borrowRatePerBlock() external view returns (uint256)"
+            "function borrowRatePerBlock() external view returns (uint256)",
+            "function exchangeRateStored() external view returns (uint256)"
         ];
 
         const comptrollerAbi = [
@@ -246,37 +248,45 @@
             btn.innerText = "🔒 Alerta Sonoro Ativado";
             btn.className = "audio-btn active";
             btn.disabled = true;
+            
+            // Inicializa a Web Audio API após a interação do usuário
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
         }
 
         function tocarAlarme() {
-            if (!audioContextEnabled) return;
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(880, ctx.currentTime);
-            gain.gain.setValueAtTime(0.5, ctx.currentTime);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.4);
+            if (!audioContextEnabled || !audioCtx) return;
+            
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Frequência do bipe
+                
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+                console.error("Erro ao tocar áudio:", e);
+            }
         }
 
-        async function updateDashboard() {
+        async function fetchDeFiData() {
             try {
-                const vBtcContract = new ethers.Contract(VBTC_CONTRACT_ADDRESS, vTokenAbi, provider);
-                const comptrollerContract = new ethers.Contract(COMPTROLLER_ADDRESS, comptrollerAbi, provider);
+                const comptroller = new ethers.Contract(COMPTROLLER_ADDRESS, comptrollerAbi, provider);
+                const vBTC = new ethers.Contract(VBTC_CONTRACT_ADDRESS, vTokenAbi, provider);
 
-                // 1. Busca Snapshot Direto na Smart Contract (Evita barreira de APIs Web2)
-                const snapshot = await vBtcContract.getAccountSnapshot(USER_WALLET);
-                const tokenBalance = snapshot[1];
-                const borrowBalanceRaw = snapshot[2];
-                const exchangeRateMantissa = snapshot[3];
+                document.getElementById("status-footer").innerText = "Atualizando métricas em tempo real...";
 
-                // Conversão Matemática do Saldo BTCB Fornecido
-                const btcUnderlyingRaw = tokenBalance.mul(exchangeRateMantissa).div(ethers.utils.parseEther("1"));
-                const btcBalanceFormatted = ethers.utils.formatUnits(btcUnderlyingRaw, 18);
-                document.getElementById("btc-balance").innerText = `${parseFloat(btcBalanceFormatted).toFixed(5)} BTCB`;
-
-                // 2. Extração e cálculo de Taxas APY Dinâmicas (Blocos anuais BNB Chain = 10512000)
-                const supplyRate = await vBtcContract.supplyRatePerBlock();
+                // 1. Coleta a Liquidez da Conta para calcular o Fator de Saúde aproximado
+                // Retorna: (error, liquidity, shortfall)
+                const [error, liquidity, shortfall] = await comptroller.getAccountLiquidity(USER_WALLET);
+                
+                // 2. Coleta o snapshot da dívida/colateral no mercado vBTC
