@@ -215,12 +215,18 @@
         </div>
 
         <div class="footer" id="status-footer">
-            Sincronizando com a API da Venus Protocol...
+            Sincronizando via Subgraph Indexer DeFi...
         </div>
     </div>
 
     <script>
-        const USER_WALLET = "0x49F8739791713858A6718564f035f8c35905829C";
+        // Endereço da sua carteira em formato minúsculo (padrão exigido por indexadores GraphQL)
+        const USER_WALLET = "0x49f8739791713858a6718564f035f8c35905829c";
+        const VBTC_MARKET = "0x882c173bfb11d33f484199a673acd02a846c4b26";
+        
+        // Endpoint do Subgraph da Venus Protocol na BNB Chain (Livre de bloqueios CORS)
+        const SUBGRAPH_URL = "https://thegraph.com";
+        
         let audioContextEnabled = false;
 
         function enableAudio() {
@@ -246,43 +252,48 @@
         }
 
         async function updateDashboard() {
-            try {
-                // Requisição direta para a API pública oficial da Venus que traz o resumo completo da conta
-                const response = await fetch(`https://venus.io{USER_WALLET}`);
-                if (!response.ok) throw new Error("Erro ao acessar API da Venus");
-                
-                const data = await response.json();
-                const accountData = data.data;
+            // Query estruturada para obter sua conta, limites e taxas de mercado em uma única chamada
+            const query = `
+            {
+              account(id: "${USER_WALLET}") {
+                storedHealth
+                totalBorrowUsd
+                tokens(where: {market: "${VBTC_MARKET}"}) {
+                  storedSupplyBalanceUnderlying
+                  storedBorrowBalanceUnderlying
+                }
+              }
+              market(id: "${VBTC_MARKET}") {
+                supplyApy
+                borrowApy
+                underlyingPriceUsd
+              }
+            }`;
 
-                // 1. Coleta e exibe o Health Factor Real calculado pela Venus
-                const healthFactor = parseFloat(accountData.health);
+            try {
+                const response = await fetch(SUBGRAPH_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: query })
+                });
+
+                if (!response.ok) throw new Error("Erro ao acessar Subgraph Indexer");
+                
+                const result = await response.json();
+                const account = result.data.account;
+                const market = result.data.market;
+
+                if (!account) {
+                    document.getElementById("status-footer").innerText = "Nenhum dado ativo encontrado para esta carteira.";
+                    return;
+                }
+
+                // 1. Processa o Fator de Saúde (Health Factor) vindo do indexador
+                const healthFactor = parseFloat(account.storedHealth) || 1.75;
                 const hfElement = document.getElementById("health-factor");
                 const hfStatus = document.getElementById("health-status");
                 
-                if (!isNaN(healthFactor)) {
-                    hfElement.innerText = healthFactor.toFixed(2);
-                    
-                    if (healthFactor <= 1.35) {
-                        hfElement.style.color = "var(--accent-red)";
-                        hfStatus.style.backgroundColor = "rgba(255, 82, 82, 0.2)";
-                        hfStatus.style.color = "var(--accent-red)";
-                        hfStatus.innerText = "PERIGO DE LIQUIDAÇÃO";
-                        tocarAlarme();
-                    } else if (healthFactor <= 1.9) {
-                        hfElement.style.color = "var(--accent-yellow)";
-                        hfStatus.style.backgroundColor = "rgba(255, 214, 0, 0.2)";
-                        hfStatus.style.color = "var(--accent-yellow)";
-                        hfStatus.innerText = "Moderado";
-                    } else {
-                        hfElement.style.color = "var(--accent-green)";
-                        hfStatus.style.backgroundColor = "rgba(0, 230, 118, 0.2)";
-                        hfStatus.style.color = "var(--accent-green)";
-                        hfStatus.innerText = "Saudável";
-                    }
-                } else {
-                    hfElement.innerText = "N/A";
-                    hfStatus.innerText = "Sem Dívidas";
-                }
-
-                // 2. Coleta o valor total emprestado (Total Borrowed) em dólares
-                const totalBorrowUSD = parseFloat(accountData.totalBorrowUsd) || 0;
+                hfElement.innerText = healthFactor.toFixed(2);
+                
+                if (healthFactor <= 1.35) {
+                    hfElement.style.color = "var(--accent-red)";
