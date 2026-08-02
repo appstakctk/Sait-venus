@@ -159,6 +159,8 @@
             margin-top: 24px;
         }
     </style>
+    <!-- Carrega a biblioteca estável necessária para decodificação blockchain -->
+    <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
@@ -173,7 +175,7 @@
             <div class="metric-box">
                 <span class="label">Health Factor</span>
                 <div class="value" id="health-factor">--</div>
-                <span class="badge" id="health-status">Buscando...</span>
+                <span class="badge" id="health-status">Conectando...</span>
             </div>
             <div class="metric-box">
                 <span class="label">Total Borrowed</span>
@@ -215,13 +217,28 @@
         </div>
 
         <div class="footer" id="status-footer">
-            Sincronizando com a API de produção da Venus...
+            Iniciando conexão segura com nós descentralizados...
         </div>
     </div>
 
     <script>
         const USER_WALLET = "0x49F8739791713858A6718564f035f8c35905829C";
+        const VBTC_CONTRACT_ADDRESS = "0x882C173bFB11d33F484199A673ACd02a846c4b26";
+        const COMPTROLLER_ADDRESS = "0xfD36E2c2a6789Db23113685031d7F16329158384";
+
+        // Provedor descentralizado via Ankr com CORS livre para rodar de forma perene no GitHub
+        const provider = new ethers.providers.JsonRpcProvider("https://ankr.com");
         let audioContextEnabled = false;
+
+        const vTokenAbi = [
+            "function getAccountSnapshot(address account) external view returns (uint256, uint256, uint256, uint256)",
+            "function supplyRatePerBlock() external view returns (uint256)",
+            "function borrowRatePerBlock() external view returns (uint256)"
+        ];
+
+        const comptrollerAbi = [
+            "function getAccountLiquidity(address account) external view returns (uint256, uint256, uint256)"
+        ];
 
         function enableAudio() {
             audioContextEnabled = true;
@@ -247,45 +264,19 @@
 
         async function updateDashboard() {
             try {
-                // Requisição forçando cabeçalhos limpos aceitos pelo servidor de produção da Venus
-                const response = await fetch(`https://venus.io{USER_WALLET}`, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) throw new Error("Status inválido da API");
-                const resData = await response.json();
-                const accountData = resData.data;
+                const vBtcContract = new ethers.Contract(VBTC_CONTRACT_ADDRESS, vTokenAbi, provider);
+                const comptrollerContract = new ethers.Contract(COMPTROLLER_ADDRESS, comptrollerAbi, provider);
 
-                // 1. Fator de Saúde Real
-                const healthFactor = parseFloat(accountData.health);
-                const hfElement = document.getElementById("health-factor");
-                const hfStatus = document.getElementById("health-status");
-                
-                if (!isNaN(healthFactor) && healthFactor > 0) {
-                    hfElement.innerText = healthFactor.toFixed(2);
-                    if (healthFactor <= 1.35) {
-                        hfElement.style.color = "var(--accent-red)";
-                        hfStatus.style.backgroundColor = "rgba(255, 82, 82, 0.2)";
-                        hfStatus.style.color = "var(--accent-red)";
-                        hfStatus.innerText = "PERIGO DE LIQUIDAÇÃO";
-                        tocarAlarme();
-                    } else if (healthFactor <= 1.9) {
-                        hfElement.style.color = "var(--accent-yellow)";
-                        hfStatus.style.backgroundColor = "rgba(255, 214, 0, 0.2)";
-                        hfStatus.style.color = "var(--accent-yellow)";
-                        hfStatus.innerText = "Moderado";
-                    } else {
-                        hfElement.style.color = "var(--accent-green)";
-                        hfStatus.style.backgroundColor = "rgba(0, 230, 118, 0.2)";
-                        hfStatus.style.color = "var(--accent-green)";
-                        hfStatus.innerText = "Saudável";
-                    }
-                } else {
-                    hfElement.innerText = "1.75"; // Fallback para manter o layout ativo
-                    hfStatus.innerText = "Moderado";
-                }
+                // 1. Busca Snapshot Direto na Smart Contract (Evita barreira de APIs Web2)
+                const snapshot = await vBtcContract.getAccountSnapshot(USER_WALLET);
+                const tokenBalance = snapshot[1];
+                const borrowBalanceRaw = snapshot[2];
+                const exchangeRateMantissa = snapshot[3];
 
+                // Conversão Matemática do Saldo BTCB Fornecido
+                const btcUnderlyingRaw = tokenBalance.mul(exchangeRateMantissa).div(ethers.utils.parseEther("1"));
+                const btcBalanceFormatted = ethers.utils.formatUnits(btcUnderlyingRaw, 18);
+                document.getElementById("btc-balance").innerText = `${parseFloat(btcBalanceFormatted).toFixed(5)} BTCB`;
+
+                // 2. Extração e cálculo de Taxas APY Dinâmicas (Blocos anuais BNB Chain = 10512000)
+                const supplyRate = await vBtcContract.supplyRatePerBlock();
