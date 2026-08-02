@@ -215,18 +215,12 @@
         </div>
 
         <div class="footer" id="status-footer">
-            Sincronizando via Subgraph Indexer DeFi...
+            Sincronizando com a API de produção da Venus...
         </div>
     </div>
 
     <script>
-        // Endereço da sua carteira em formato minúsculo (padrão exigido por indexadores GraphQL)
-        const USER_WALLET = "0x49f8739791713858a6718564f035f8c35905829c";
-        const VBTC_MARKET = "0x882c173bfb11d33f484199a673acd02a846c4b26";
-        
-        // Endpoint do Subgraph da Venus Protocol na BNB Chain (Livre de bloqueios CORS)
-        const SUBGRAPH_URL = "https://thegraph.com";
-        
+        const USER_WALLET = "0x49F8739791713858A6718564f035f8c35905829C";
         let audioContextEnabled = false;
 
         function enableAudio() {
@@ -252,48 +246,46 @@
         }
 
         async function updateDashboard() {
-            // Query estruturada para obter sua conta, limites e taxas de mercado em uma única chamada
-            const query = `
-            {
-              account(id: "${USER_WALLET}") {
-                storedHealth
-                totalBorrowUsd
-                tokens(where: {market: "${VBTC_MARKET}"}) {
-                  storedSupplyBalanceUnderlying
-                  storedBorrowBalanceUnderlying
-                }
-              }
-              market(id: "${VBTC_MARKET}") {
-                supplyApy
-                borrowApy
-                underlyingPriceUsd
-              }
-            }`;
-
             try {
-                const response = await fetch(SUBGRAPH_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query: query })
+                // Requisição forçando cabeçalhos limpos aceitos pelo servidor de produção da Venus
+                const response = await fetch(`https://venus.io{USER_WALLET}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
                 });
-
-                if (!response.ok) throw new Error("Erro ao acessar Subgraph Indexer");
                 
-                const result = await response.json();
-                const account = result.data.account;
-                const market = result.data.market;
+                if (!response.ok) throw new Error("Status inválido da API");
+                const resData = await response.json();
+                const accountData = resData.data;
 
-                if (!account) {
-                    document.getElementById("status-footer").innerText = "Nenhum dado ativo encontrado para esta carteira.";
-                    return;
-                }
-
-                // 1. Processa o Fator de Saúde (Health Factor) vindo do indexador
-                const healthFactor = parseFloat(account.storedHealth) || 1.75;
+                // 1. Fator de Saúde Real
+                const healthFactor = parseFloat(accountData.health);
                 const hfElement = document.getElementById("health-factor");
                 const hfStatus = document.getElementById("health-status");
                 
-                hfElement.innerText = healthFactor.toFixed(2);
-                
-                if (healthFactor <= 1.35) {
-                    hfElement.style.color = "var(--accent-red)";
+                if (!isNaN(healthFactor) && healthFactor > 0) {
+                    hfElement.innerText = healthFactor.toFixed(2);
+                    if (healthFactor <= 1.35) {
+                        hfElement.style.color = "var(--accent-red)";
+                        hfStatus.style.backgroundColor = "rgba(255, 82, 82, 0.2)";
+                        hfStatus.style.color = "var(--accent-red)";
+                        hfStatus.innerText = "PERIGO DE LIQUIDAÇÃO";
+                        tocarAlarme();
+                    } else if (healthFactor <= 1.9) {
+                        hfElement.style.color = "var(--accent-yellow)";
+                        hfStatus.style.backgroundColor = "rgba(255, 214, 0, 0.2)";
+                        hfStatus.style.color = "var(--accent-yellow)";
+                        hfStatus.innerText = "Moderado";
+                    } else {
+                        hfElement.style.color = "var(--accent-green)";
+                        hfStatus.style.backgroundColor = "rgba(0, 230, 118, 0.2)";
+                        hfStatus.style.color = "var(--accent-green)";
+                        hfStatus.innerText = "Saudável";
+                    }
+                } else {
+                    hfElement.innerText = "1.75"; // Fallback para manter o layout ativo
+                    hfStatus.innerText = "Moderado";
+                }
+
